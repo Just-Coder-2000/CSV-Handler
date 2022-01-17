@@ -20,11 +20,12 @@
  * 
  * @attention for csv reading
  * [1] CSV_READ_FILE(fileName, splitor, itemType, ...)
- * [2] CSV_READ_ALL_ITEMS(ifstream, splitor, itemType, ...)
- * [3] CSV_READ_ITEMS(ifstream, splitor, itemNum, itemType, ...)
+ * [2] CSV_READ_IFS_ALL(ifstream, splitor, itemType, ...)
+ * [3] CSV_READ_IFS_CER(ifstream, splitor, itemNum, itemType, ...)
  * 
  * @attention for csv writing
- * 
+ * [1] CSV_WRITE_OFS(ofstream, data, splitor, itemType, ...)
+ * [2] CSV_WRITE_FILE(fileName, data, splitor, itemType, ...)
  */
 
 namespace ns_csv
@@ -36,7 +37,7 @@ namespace ns_csv
      * @param itemType the type of the item in the csv file
      * @param itemNum the number of the items to read
      * @param ... the types of the members,
-     *             it's order is same as the constructor of the structure
+     *             it's order is same as the declaration sequence of member variables.
      */
 #define CSV_READ_FILE(fileName, splitor, itemType, ...) \
     ns_csv::CSVHandler::read<                           \
@@ -50,12 +51,12 @@ namespace ns_csv
      * @param splitor the splitor
      * @param itemType the type of the item in the csv file
      * @param ... the types of the members,
-     *             it's order is same as the constructor of the structure
+     *             it's order is same as the declaration sequence of member variables.
      */
-#define CSV_READ_ALL_ITEMS(ifstream, splitor, itemType, ...) \
-    ns_csv::CSVHandler::read<                                \
-        itemType,                                            \
-        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),              \
+#define CSV_READ_IFS_ALL(ifstream, splitor, itemType, ...) \
+    ns_csv::CSVHandler::read<                              \
+        itemType,                                          \
+        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),            \
         __VA_ARGS__>(ifstream, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor)
 
     /**
@@ -65,13 +66,37 @@ namespace ns_csv
      * @param itemType the type of the item in the csv file
      * @param itemNum the number of the items to read
      * @param ... the types of the members,
-     *             it's order is same as the constructor of the structure
+     *             it's order is same as the declaration sequence of member variables.
      */
-#define CSV_READ_ITEMS(ifstream, splitor, itemNum, itemType, ...) \
-    ns_csv::CSVHandler::read<                                     \
-        itemType,                                                 \
-        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),                   \
+#define CSV_READ_IFS_CER(ifstream, splitor, itemNum, itemType, ...) \
+    ns_csv::CSVHandler::read<                                       \
+        itemType,                                                   \
+        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),                     \
         __VA_ARGS__>(ifstream, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor, itemNum)
+
+    /**
+     * @brief 
+     * @param osftream the out fstream
+     * @param data the data array
+     * @param splitor the splitor
+     * @param itemType the type of item
+     * @param ... the [methods|member name] to get members from a item
+     */
+#define CSV_WRITE_OFS(ofstream, data, splitor, itemType, ...) \
+    ns_csv::CSVHandler::write<                                \
+        itemType, OUTPUT_FUN_TYPE(itemType)>(ofstream, data, GEN_OUTPUT_FUN(itemType, splitor, __VA_ARGS__))
+
+    /**
+     * @brief 
+     * @param fileName the file name
+     * @param data the data array
+     * @param splitor the splitor
+     * @param itemType the type of item
+     * @param ... the [methods|member name] to get members from a item
+     */
+#define CSV_WRITE_FILE(fileName, data, splitor, itemType, ...) \
+    ns_csv::CSVHandler::write<                                 \
+        itemType, OUTPUT_FUN_TYPE(itemType)>(fileName, data, GEN_OUTPUT_FUN(itemType, splitor, __VA_ARGS__))
 
     /**
      * @brief define for macro 'MAKE_APIR'
@@ -143,12 +168,63 @@ namespace ns_csv
 #define GEN_UNPACK_FUN(ITEM_TYPE, ...)                         \
     [](const MAKE_PAIR(__VA_ARGS__) & pack) -> ITEM_TYPE       \
     {                                                          \
-        return ITEM_TYPE(CONSTRUCT_PARAMS(pack, __VA_ARGS__)); \
+        return ITEM_TYPE{CONSTRUCT_PARAMS(pack, __VA_ARGS__)}; \
     }
 
 #define UNPACK_FUN_TYPE(ITEM_TYPE, ...) \
     ITEM_TYPE(*)                        \
     (const MAKE_PAIR(__VA_ARGS__) &)
+
+    /**
+     * @brief define for output list
+     * 
+     */
+#define OUTPUT_LIST_10(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_9(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_9(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_8(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_8(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_7(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_7(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_6(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_6(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_5(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_5(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_4(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_4(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_3(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_3(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_2(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_2(ELEM, SPLITOR, GET, ...) \
+    ELEM.GET << SPLITOR << OUTPUT_LIST_1(ELEM, SPLITOR, __VA_ARGS__)
+
+#define OUTPUT_LIST_1(ELEM, SPLITOR, GET) \
+    ELEM.GET << '\n'
+
+#define OUTPUT_LIST(ELEM, SPLITOR, ...)                            \
+    MACRO_COMBINE(OUTPUT_LIST_, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)) \
+    (ELEM, SPLITOR, __VA_ARGS__)
+
+    /**
+     * @brief define for output fun
+     * 
+     */
+#define GEN_OUTPUT_FUN(ITEM_TYPE, SPLITOR, ...)             \
+    [](std::ofstream &ofs, const ITEM_TYPE &item) -> void { \
+        ofs << OUTPUT_LIST(item, SPLITOR, __VA_ARGS__);     \
+        return;                                             \
+    }
+
+#define OUTPUT_FUN_TYPE(ITEM_TYPE) \
+    void (*)(std::ofstream &, const ITEM_TYPE &)
 
     /**
      * @brief for type trans throw std::stringstream
@@ -228,6 +304,24 @@ namespace ns_csv
             }
             ifs.close();
             return data;
+        }
+
+        template <typename ItemType, typename OutputFunType>
+        static void write(std::ofstream &ofs, const std::vector<ItemType> &data, const OutputFunType &outputFun)
+        {
+            for (const auto &elem : data)
+                outputFun(ofs, elem);
+            return;
+        }
+
+        template <typename ItemType, typename OutputFunType>
+        static void write(const std::string &fileName, const std::vector<ItemType> &data, const OutputFunType &outputFun)
+        {
+            std::ofstream ofs(fileName);
+            for (const auto &elem : data)
+                outputFun(ofs, elem);
+            ofs.close();
+            return;
         }
 
     private:
