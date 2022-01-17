@@ -1,5 +1,13 @@
 #pragma once
-
+/**
+ * @file csvhandler.h
+ * @author csl (3079625093@qq.com)
+ * @version 0.1
+ * @date 2022-01-17
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <iostream>
 #include <vector>
 #include <string>
@@ -7,22 +15,96 @@
 #include <fstream>
 #include <sstream>
 
+/**
+ * @brief macroes you can use:
+ * 
+ * @attention for csv reading
+ * [1] CSV_READ_FILE(fileName, splitor, itemType, ...)
+ * [2] CSV_READ_ALL_ITEMS(ifstream, splitor, itemType, ...)
+ * [3] CSV_READ_ITEMS(ifstream, splitor, itemNum, itemType, ...)
+ * 
+ * @attention for csv writing
+ * 
+ */
+
 namespace ns_csv
 {
+    /**
+     * @brief read all items in the ifstream
+     * @param ifstream the input fstream
+     * @param splitor the splitor
+     * @param itemType the type of the item in the csv file
+     * @param itemNum the number of the items to read
+     * @param ... the types of the members,
+     *             it's order is same as the constructor of the structure
+     */
+#define CSV_READ_FILE(fileName, splitor, itemType, ...) \
+    ns_csv::CSVHandler::read<                           \
+        itemType,                                       \
+        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),         \
+        __VA_ARGS__>(fileName, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor)
 
     /**
-     * @attention change the value of  macro 'STRUCT_MEMBER_NUM' before make the program
-     * @param VAL the number of structure member variables
-     * for example :
-     * struct{ uint _m1; float _m2; float _m3; std::string _m4; },
-     * setthe macro 'STRUCT_MEMBER_NUM' 4
+     * @brief read all items in the ifstream
+     * @param ifstream the input fstream
+     * @param splitor the splitor
+     * @param itemType the type of the item in the csv file
+     * @param ... the types of the members,
+     *             it's order is same as the constructor of the structure
      */
-
-#define STRUCT_MEMBER_NUM 4
+#define CSV_READ_ALL_ITEMS(ifstream, splitor, itemType, ...) \
+    ns_csv::CSVHandler::read<                                \
+        itemType,                                            \
+        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),              \
+        __VA_ARGS__>(ifstream, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor)
 
     /**
-     * @attention
+     * @brief read all items in the ifstream
+     * @param ifstream the input fstream
+     * @param splitor the splitor
+     * @param itemType the type of the item in the csv file
+     * @param itemNum the number of the items to read
+     * @param ... the types of the members,
+     *             it's order is same as the constructor of the structure
      */
+#define CSV_READ_ITEMS(ifstream, splitor, itemNum, itemType, ...) \
+    ns_csv::CSVHandler::read<                                     \
+        itemType,                                                 \
+        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),                   \
+        __VA_ARGS__>(ifstream, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor, itemNum)
+
+    /**
+     * @brief define for macro 'MAKE_APIR'
+     * 
+     */
+#define MAKE_PAIR_10(TYPE, ...) std::pair<TYPE, MAKE_PAIR_9(__VA_ARGS__)>
+#define MAKE_PAIR_9(TYPE, ...) std::pair<TYPE, MAKE_PAIR_8(__VA_ARGS__)>
+#define MAKE_PAIR_8(TYPE, ...) std::pair<TYPE, MAKE_PAIR_7(__VA_ARGS__)>
+#define MAKE_PAIR_7(TYPE, ...) std::pair<TYPE, MAKE_PAIR_6(__VA_ARGS__)>
+#define MAKE_PAIR_6(TYPE, ...) std::pair<TYPE, MAKE_PAIR_5(__VA_ARGS__)>
+#define MAKE_PAIR_5(TYPE, ...) std::pair<TYPE, MAKE_PAIR_4(__VA_ARGS__)>
+#define MAKE_PAIR_4(TYPE, ...) std::pair<TYPE, MAKE_PAIR_3(__VA_ARGS__)>
+#define MAKE_PAIR_3(TYPE, ...) std::pair<TYPE, MAKE_PAIR_2(__VA_ARGS__)>
+#define MAKE_PAIR_2(TYPE1, TYPE2) std::pair<TYPE1, TYPE2>
+
+#define MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, N, ...) N
+#define COUNT_MACRO_VAR_ARGS(...) MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+
+#define MACRO_COMBINE_2(MACRO, ARGS_COUNT) MACRO##ARGS_COUNT
+#define MACRO_COMBINE_1(MACRO, ARGS_COUNT) MACRO_COMBINE_2(MACRO, ARGS_COUNT)
+#define MACRO_COMBINE(MACRO, ARGS_COUNT) MACRO_COMBINE_1(MACRO, ARGS_COUNT)
+
+#define MAKE_PAIR(...)                                           \
+    MACRO_COMBINE(MAKE_PAIR_, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)) \
+    (__VA_ARGS__)
+
+    /**
+     * @brief define for macro 'CONSTRUCT_PARAMS'
+     * 
+     */
+#define CONSTRUCT_PARAMS(PACK, ...)                                     \
+    MACRO_COMBINE(CONSTRUCT_PARAMS_, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)) \
+    (PACK)
 
 #define CONSTRUCT_PARAMS_10(PACK) \
     PACK.first, CONSTRUCT_PARAMS_9(PACK.second)
@@ -52,11 +134,26 @@ namespace ns_csv
     PACK.first, CONSTRUCT_PARAMS_1(PACK.second)
 
 #define CONSTRUCT_PARAMS_1(PACK) \
-    PACK.first, PACK.second
-
-#define CONSTRUCT_PARAMS_0(PACK) \
     PACK
 
+    /**
+     * @brief define for UNPACK function
+     * 
+     */
+#define GEN_UNPACK_FUN(ITEM_TYPE, ...)                         \
+    [](const MAKE_PAIR(__VA_ARGS__) & pack) -> ITEM_TYPE       \
+    {                                                          \
+        return ITEM_TYPE(CONSTRUCT_PARAMS(pack, __VA_ARGS__)); \
+    }
+
+#define UNPACK_FUN_TYPE(ITEM_TYPE, ...) \
+    ITEM_TYPE(*)                        \
+    (const MAKE_PAIR(__VA_ARGS__) &)
+
+    /**
+     * @brief for type trans throw std::stringstream
+     * 
+     */
     static std::stringstream stream;
 
 #define STRTO(STR, VAL) \
@@ -91,45 +188,45 @@ namespace ns_csv
 
     class CSVHandler
     {
-    public:
+    private:
         CSVHandler() = delete;
 
     public:
-        template <typename ItemType, typename... ElemTypes>
-        static std::vector<ItemType> read(std::ifstream &ifs, char splitor = ',', int itemNum = INT32_MAX)
+        template <typename ItemType, typename UnpackFunType, typename... ElemTypes>
+        static std::vector<ItemType> read(std::ifstream &ifs, const UnpackFunType &unpackFun, char splitor = ',', int itemNum = INT32_MAX)
         {
             std::vector<ItemType> data;
             std::string strline;
             int itemCount = 0;
-            while (std::getline(ifs, strline) && itemCount < itemNum)
+            while (itemCount < itemNum)
+            {
+                if (std::getline(ifs, strline))
+                {
+                    auto strVec = CSVHandler::split(strline, splitor);
+                    auto params = __ElemTypeTrait<ElemTypes...>::gen(strVec.begin());
+                    data.push_back(unpackFun(params));
+                    ++itemCount;
+                }
+                else
+                    break;
+            }
+
+            return data;
+        }
+
+        template <typename ItemType, typename UnpackFunType, typename... ElemTypes>
+        static std::vector<ItemType> read(const std::string &fileName, const UnpackFunType &unpackFun, char splitor = ',')
+        {
+            std::ifstream ifs(fileName);
+            std::vector<ItemType> data;
+            std::string strline;
+            while (std::getline(ifs, strline))
             {
                 auto strVec = CSVHandler::split(strline, splitor);
                 auto params = __ElemTypeTrait<ElemTypes...>::gen(strVec.begin());
-
-#if STRUCT_MEMBER_NUM == 1
-                data.push_back(ItemType(CONSTRUCT_PARAMS_0(params)));
-#elif STRUCT_MEMBER_NUM == 2
-                data.push_back(ItemType(CONSTRUCT_PARAMS_1(params)));
-#elif STRUCT_MEMBER_NUM == 3
-                data.push_back(ItemType(CONSTRUCT_PARAMS_2(params)));
-#elif STRUCT_MEMBER_NUM == 4
-                data.push_back(ItemType(CONSTRUCT_PARAMS_3(params)));
-#elif STRUCT_MEMBER_NUM == 5
-                data.push_back(ItemType(CONSTRUCT_PARAMS_4(params)));
-#elif STRUCT_MEMBER_NUM == 6
-                data.push_back(ItemType(CONSTRUCT_PARAMS_5(params)));
-#elif STRUCT_MEMBER_NUM == 7
-                data.push_back(ItemType(CONSTRUCT_PARAMS_6(params)));
-#elif STRUCT_MEMBER_NUM == 8
-                data.push_back(ItemType(CONSTRUCT_PARAMS_7(params)));
-#elif STRUCT_MEMBER_NUM == 9
-                data.push_back(ItemType(CONSTRUCT_PARAMS_8(params)));
-#elif STRUCT_MEMBER_NUM == 10
-                data.push_back(ItemType(CONSTRUCT_PARAMS_9(params)));
-#endif
-                ++itemCount;
+                data.push_back(unpackFun(params));
             }
-
+            ifs.close();
             return data;
         }
 
