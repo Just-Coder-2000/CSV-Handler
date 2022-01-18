@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
+#include <array>
 
 /**
  * @brief macroes you can use:
@@ -32,12 +33,14 @@ namespace ns_csv
 {
     /**
      * @brief read all items in the ifstream
+     * 
      * @param ifstream the input fstream
      * @param splitor the splitor
      * @param itemType the type of the item in the csv file
-     * @param itemNum the number of the items to read
      * @param ... the types of the members,
      *             it's order is same as the declaration sequence of member variables.
+     * 
+     * @return std::vector<itemType> data
      */
 #define CSV_READ_FILE(fileName, splitor, itemType, ...) \
     ns_csv::CSVHandler::read<                           \
@@ -47,11 +50,31 @@ namespace ns_csv
 
     /**
      * @brief read all items in the ifstream
+     * 
      * @param ifstream the input fstream
      * @param splitor the splitor
      * @param itemType the type of the item in the csv file
      * @param ... the types of the members,
      *             it's order is same as the declaration sequence of member variables.
+     * 
+     * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
+     */
+#define CSV_READ_FILE_H(fileName, splitor, itemType, ...) \
+    ns_csv::CSVHandler::read<                             \
+        itemType, COUNT_MACRO_VAR_ARGS(__VA_ARGS__),      \
+        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),           \
+        __VA_ARGS__>(fileName, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor)
+
+    /**
+     * @brief read all items in the ifstream
+     * 
+     * @param ifstream the input fstream
+     * @param splitor the splitor
+     * @param itemType the type of the item in the csv file
+     * @param ... the types of the members,
+     *             it's order is same as the declaration sequence of member variables.
+     * 
+     * @return std::vector<itemType> data
      */
 #define CSV_READ_IFS_ALL(ifstream, splitor, itemType, ...) \
     ns_csv::CSVHandler::read<                              \
@@ -61,12 +84,32 @@ namespace ns_csv
 
     /**
      * @brief read all items in the ifstream
+     * 
+     * @param ifstream the input fstream
+     * @param splitor the splitor
+     * @param itemType the type of the item in the csv file
+     * @param ... the types of the members,
+     *             it's order is same as the declaration sequence of member variables.
+     * 
+     * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
+     */
+#define CSV_READ_IFS_ALL_H(ifstream, splitor, itemType, ...) \
+    ns_csv::CSVHandler::read<                                \
+        itemType, COUNT_MACRO_VAR_ARGS(__VA_ARGS__),         \
+        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),              \
+        __VA_ARGS__>(ifstream, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor)
+
+    /**
+     * @brief read all items in the ifstream
+     * 
      * @param ifstream the input fstream
      * @param splitor the splitor
      * @param itemType the type of the item in the csv file
      * @param itemNum the number of the items to read
      * @param ... the types of the members,
      *             it's order is same as the declaration sequence of member variables.
+     * 
+     * @return std::vector<itemType> data
      */
 #define CSV_READ_IFS_CER(ifstream, splitor, itemNum, itemType, ...) \
     ns_csv::CSVHandler::read<                                       \
@@ -75,28 +118,94 @@ namespace ns_csv
         __VA_ARGS__>(ifstream, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor, itemNum)
 
     /**
-     * @brief 
+     * @brief read all items in the ifstream
+     * 
+     * @param ifstream the input fstream
+     * @param splitor the splitor
+     * @param itemType the type of the item in the csv file
+     * @param itemNum the number of the items to read
+     * @param ... the types of the members,
+     *             it's order is same as the declaration sequence of member variables.
+     * 
+     * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
+     */
+#define CSV_READ_IFS_CER_H(ifstream, splitor, itemNum, itemType, ...) \
+    ns_csv::CSVHandler::read<                                         \
+        itemType, COUNT_MACRO_VAR_ARGS(__VA_ARGS__),                  \
+        UNPACK_FUN_TYPE(itemType, __VA_ARGS__),                       \
+        __VA_ARGS__>(ifstream, GEN_UNPACK_FUN(itemType, __VA_ARGS__), splitor, itemNum)
+
+    /**
+     * @brief write data to a csv file
+     * 
      * @param osftream the out fstream
      * @param data the data array
      * @param splitor the splitor
      * @param itemType the type of item
-     * @param ... the [methods|member name] to get members from a item
+     * @param ... the [methods | member name] to get members from a item
+     * 
+     * @return void
      */
-#define CSV_WRITE_OFS(ofstream, data, splitor, itemType, ...) \
-    ns_csv::CSVHandler::write<                                \
-        itemType, OUTPUT_FUN_TYPE(itemType)>(ofstream, data, GEN_OUTPUT_FUN(itemType, splitor, __VA_ARGS__))
+#define CSV_WRITE_OFS(ofstream, data, splitor, itemType, ...)            \
+    ns_csv::CSVHandler::write<itemType,                                  \
+                              OUTPUT_FUN_TYPE(itemType)>(ofstream, data, \
+                                                         GEN_OUTPUT_FUN(itemType, splitor, __VA_ARGS__))
 
     /**
-     * @brief 
+     * @brief write data to a csv file
+     * 
+     * @param osftream the out fstream
+     * @param data the data array
+     * @param header the header labels
+     * @param splitor the splitor
+     * @param itemType the type of item
+     * @param ... the [methods | member name] to get members from a item
+     * 
+     * @return void
+     */
+#define CSV_WRITE_OFS_H(ofstream, header, data, splitor, itemType, ...)                   \
+    ns_csv::CSVHandler::write<itemType, COUNT_MACRO_VAR_ARGS(__VA_ARGS__),                \
+                              OUTPUT_FUN_TYPE(itemType)>(ofstream, header, data, splitor, \
+                                                         GEN_OUTPUT_FUN(itemType, splitor, __VA_ARGS__))
+
+    /**
+     * @brief write data to a csv file
+     * 
      * @param fileName the file name
      * @param data the data array
      * @param splitor the splitor
      * @param itemType the type of item
-     * @param ... the [methods|member name] to get members from a item
+     * @param ... the [methods | member name] to get members from a item
+     * 
+     * @return void
      */
-#define CSV_WRITE_FILE(fileName, data, splitor, itemType, ...) \
-    ns_csv::CSVHandler::write<                                 \
-        itemType, OUTPUT_FUN_TYPE(itemType)>(fileName, data, GEN_OUTPUT_FUN(itemType, splitor, __VA_ARGS__))
+#define CSV_WRITE_FILE(fileName, data, splitor, itemType, ...)           \
+    ns_csv::CSVHandler::write<itemType,                                  \
+                              OUTPUT_FUN_TYPE(itemType)>(fileName, data, \
+                                                         GEN_OUTPUT_FUN(itemType, splitor, __VA_ARGS__))
+
+    /**
+     * @brief write data to a csv file
+     * 
+     * @param fileName the file name
+     * @param header the header labels
+     * @param data the data array
+     * @param splitor the splitor
+     * @param itemType the type of item
+     * @param ... the [methods | member name] to get members from a item
+     * 
+     * @return void
+     */
+#define CSV_WRITE_FILE_H(fileName, header, data, splitor, itemType, ...)                  \
+    ns_csv::CSVHandler::write<itemType, COUNT_MACRO_VAR_ARGS(__VA_ARGS__),                \
+                              OUTPUT_FUN_TYPE(itemType)>(fileName, header, data, splitor, \
+                                                         GEN_OUTPUT_FUN(itemType, splitor, __VA_ARGS__))
+    /**
+     * @brief generate the array of csv header
+     * @param ... the header strings
+     */
+#define CSV_HEADER(...) \
+    std::array<std::string, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)> { __VA_ARGS__ }
 
     /**
      * @brief define for macro 'MAKE_APIR'
@@ -268,8 +377,11 @@ namespace ns_csv
         CSVHandler() = delete;
 
     public:
+        /**
+         * @brief for 'CSV_READ_IFS'
+         */
         template <typename ItemType, typename UnpackFunType, typename... ElemTypes>
-        static std::vector<ItemType> read(std::ifstream &ifs, const UnpackFunType &unpackFun, char splitor = ',', int itemNum = INT32_MAX)
+        static std::vector<ItemType> read(std::ifstream &ifs, const UnpackFunType &unpackFun, char splitor, int itemNum = INT32_MAX)
         {
             std::vector<ItemType> data;
             std::string strline;
@@ -286,12 +398,39 @@ namespace ns_csv
                 else
                     break;
             }
-
             return data;
         }
+        /**
+         * @brief for 'CSV_READ_IFS_H'
+         */
+        template <typename ItemType, std::size_t LabelNum, typename UnpackFunType, typename... ElemTypes>
+        static std::pair<std::array<std::string, LabelNum>, std::vector<ItemType>>
+        read(std::ifstream &ifs, const UnpackFunType &unpackFun, char splitor, int itemNum = INT32_MAX)
+        {
+            auto header = ns_csv::CSVHandler::readHeader<LabelNum>(ifs, splitor);
+            std::vector<ItemType> data;
+            std::string strline;
+            int itemCount = 0;
+            while (itemCount < itemNum)
+            {
+                if (std::getline(ifs, strline))
+                {
+                    auto strVec = CSVHandler::split(strline, splitor);
+                    auto params = __ElemTypeTrait<ElemTypes...>::gen(strVec.begin());
+                    data.push_back(unpackFun(params));
+                    ++itemCount;
+                }
+                else
+                    break;
+            }
+            return {header, data};
+        }
 
+        /**
+         * @brief for 'CSV_READ_FILE'
+         */
         template <typename ItemType, typename UnpackFunType, typename... ElemTypes>
-        static std::vector<ItemType> read(const std::string &fileName, const UnpackFunType &unpackFun, char splitor = ',')
+        static std::vector<ItemType> read(const std::string &fileName, const UnpackFunType &unpackFun, char splitor)
         {
             std::ifstream ifs(fileName);
             std::vector<ItemType> data;
@@ -305,10 +444,40 @@ namespace ns_csv
             ifs.close();
             return data;
         }
+        /**
+         * @brief for 'CSV_READ_FILE_H'
+         */
+        template <typename ItemType, std::size_t LabelNum, typename UnpackFunType, typename... ElemTypes>
+        static std::pair<std::array<std::string, LabelNum>, std::vector<ItemType>>
+        read(const std::string &fileName, const UnpackFunType &unpackFun, char splitor)
+        {
+            std::ifstream ifs(fileName);
+            auto header = ns_csv::CSVHandler::readHeader<LabelNum>(ifs, splitor);
+            std::vector<ItemType> data;
+            std::string strline;
+            while (std::getline(ifs, strline))
+            {
+                auto strVec = CSVHandler::split(strline, splitor);
+                auto params = __ElemTypeTrait<ElemTypes...>::gen(strVec.begin());
+                data.push_back(unpackFun(params));
+            }
+            ifs.close();
+            return {header, data};
+        }
 
         template <typename ItemType, typename OutputFunType>
         static void write(std::ofstream &ofs, const std::vector<ItemType> &data, const OutputFunType &outputFun)
         {
+            for (const auto &elem : data)
+                outputFun(ofs, elem);
+            return;
+        }
+
+        template <typename ItemType, std::size_t LabelNum, typename OutputFunType>
+        static void write(std::ofstream &ofs, const std::array<std::string, LabelNum> &header,
+                          const std::vector<ItemType> &data, char splitor, const OutputFunType &outputFun)
+        {
+            ns_csv::CSVHandler::writeHeader(ofs, header, splitor);
             for (const auto &elem : data)
                 outputFun(ofs, elem);
             return;
@@ -321,6 +490,39 @@ namespace ns_csv
             for (const auto &elem : data)
                 outputFun(ofs, elem);
             ofs.close();
+            return;
+        }
+
+        template <typename ItemType, std::size_t LabelNum, typename OutputFunType>
+        static void write(const std::string &fileName, const std::array<std::string, LabelNum> &header,
+                          const std::vector<ItemType> &data, char splitor, const OutputFunType &outputFun)
+        {
+            std::ofstream ofs(fileName);
+            ns_csv::CSVHandler::writeHeader(ofs, header, splitor);
+            for (const auto &elem : data)
+                outputFun(ofs, elem);
+            ofs.close();
+            return;
+        }
+
+        template <std::size_t LabelNum>
+        static std::array<std::string, LabelNum> readHeader(std::ifstream &ifs, char splitor)
+        {
+            std::array<std::string, LabelNum> header;
+            std::string str;
+            std::getline(ifs, str);
+            auto vec = split(str, splitor);
+            for (int i = 0; i != LabelNum; ++i)
+                header[i] = vec.at(i);
+            return header;
+        }
+
+        template <std::size_t LabelNum>
+        static void writeHeader(std::ofstream &ofs, const std::array<std::string, LabelNum> &header, char splitor)
+        {
+            for (int i = 0; i != LabelNum - 1; ++i)
+                ofs << header[i] << splitor;
+            ofs << header[LabelNum - 1] << '\n';
             return;
         }
 
