@@ -1,12 +1,41 @@
+/**
+ * @file main.cpp
+ * @author csl (3079625093@qq.com)
+ * @version 0.1
+ * @date 2022-01-19
+ * 
+ * @copyright Copyright (c) 2022
+ */
+
 #include "csvhandler.h"
 #include <artwork/geometry/point.hpp>
 #include <artwork/logger/logger.h>
 
 struct Info
 {
+private:
+    /**
+     * @brief the members
+     */
     uint _gd;
     std::string _name;
     float _score;
+
+public:
+    /**
+     * @brief Construct a new Info object
+     */
+    Info(const uint &gd, const std::string &name, const float &score)
+        : _gd(gd), _name(name), _score(score) {}
+
+    inline uint &gd() { return this->_gd; }
+    inline const uint &gd() const { return this->_gd; }
+
+    inline std::string &name() { return this->_name; }
+    inline const std::string &name() const { return this->_name; }
+
+    inline float &score() { return this->_score; }
+    inline const float &score() const { return this->_score; }
 };
 
 void csv_write_ofs()
@@ -78,7 +107,7 @@ void csv_read_ifs()
     ns_log::process << "use macro 'CSV_READ_IFS_CER' to read certain items from file 'info.csv'" << ns_log::endl;
     auto rps1 = CSV_READ_IFS_CER(ifs, ',', 5, Info, uint, std::string, float);
     for (const auto &elem : rps1)
-        std::cout << elem._gd << ',' << elem._name << ',' << elem._score << std::endl;
+        std::cout << elem.gd() << ',' << elem.name() << ',' << elem.score() << std::endl;
 
     /**
      * @brief use macro 'CSV_READ_IFS_ALL' to read all rest items
@@ -86,7 +115,7 @@ void csv_read_ifs()
     ns_log::process << "use macro 'CSV_READ_IFS_ALL' to read all rest items from file 'info.csv'" << ns_log::endl;
     auto rps2 = CSV_READ_IFS_ALL(ifs, ',', Info, uint, std::string, float);
     for (const auto &elem : rps2)
-        std::cout << elem._gd << ',' << elem._name << ',' << elem._score << std::endl;
+        std::cout << elem.gd() << ',' << elem.name() << ',' << elem.score() << std::endl;
     ifs.close();
 }
 
@@ -123,7 +152,7 @@ void csv_read_file()
     ns_log::process << "use macro 'CSV_READ_FILE' to read all items in the file" << ns_log::endl;
     auto info = CSV_READ_FILE("../data/info.csv", ',', Info, uint, std::string, float);
     for (const auto &elem : info)
-        std::cout << elem._gd << ',' << elem._name << ',' << elem._score << std::endl;
+        std::cout << elem.gd() << ',' << elem.name() << ',' << elem.score() << std::endl;
 }
 
 void csv_read_file_h()
