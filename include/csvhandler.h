@@ -221,9 +221,14 @@ namespace ns_csv
 #define MAKE_PAIR_3(TYPE, ...) std::pair<TYPE, MAKE_PAIR_2(__VA_ARGS__)>
 #define MAKE_PAIR_2(TYPE1, TYPE2) std::pair<TYPE1, TYPE2>
 
+    /**
+     * @brief count the number of the arguements, range[0, 10]
+     */
 #define MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, N, ...) N
 #define COUNT_MACRO_VAR_ARGS(...) MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
-
+    /**
+     * @brief combine the macro with the arguements' num
+     */
 #define MACRO_COMBINE_2(MACRO, ARGS_COUNT) MACRO##ARGS_COUNT
 #define MACRO_COMBINE_1(MACRO, ARGS_COUNT) MACRO_COMBINE_2(MACRO, ARGS_COUNT)
 #define MACRO_COMBINE(MACRO, ARGS_COUNT) MACRO_COMBINE_1(MACRO, ARGS_COUNT)
@@ -240,6 +245,9 @@ namespace ns_csv
     MACRO_COMBINE(CONSTRUCT_PARAMS_, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)) \
     (PACK)
 
+    /**
+     * @brief unpack the pair pack to params list
+     */
 #define CONSTRUCT_PARAMS_10(PACK) \
     PACK.first, CONSTRUCT_PARAMS_9(PACK.second)
 
@@ -280,13 +288,15 @@ namespace ns_csv
         return ITEM_TYPE{CONSTRUCT_PARAMS(pack, __VA_ARGS__)}; \
     }
 
+    /**
+     * @brief the type of the unpack function
+     */
 #define UNPACK_FUN_TYPE(ITEM_TYPE, ...) \
     ITEM_TYPE(*)                        \
     (const MAKE_PAIR(__VA_ARGS__) &)
 
     /**
-     * @brief define for output list
-     * 
+     * @brief generate the output list for each item
      */
 #define OUTPUT_LIST_10(ELEM, SPLITOR, GET, ...) \
     ELEM.GET << SPLITOR << OUTPUT_LIST_9(ELEM, SPLITOR, __VA_ARGS__)
@@ -332,6 +342,9 @@ namespace ns_csv
         return;                                             \
     }
 
+    /**
+     * @brief the type of the output function
+     */
 #define OUTPUT_FUN_TYPE(ITEM_TYPE) \
     void (*)(std::ofstream &, const ITEM_TYPE &)
 
@@ -352,6 +365,9 @@ namespace ns_csv
     template <typename First, typename... Rest>
     struct __ElemTypeTrait<First, Rest...>
     {
+        /**
+         * @brief convert current string to type 'First'
+         */
         static auto gen(std::vector<std::string>::iterator iter)
         {
             First val;
@@ -363,6 +379,9 @@ namespace ns_csv
     template <typename Last>
     struct __ElemTypeTrait<Last>
     {
+        /**
+         * @brief convert current string to type 'Last'
+         */
         static auto gen(std::vector<std::string>::iterator iter)
         {
             Last val;
@@ -465,6 +484,9 @@ namespace ns_csv
             return {header, data};
         }
 
+        /**
+         * @brief for 'CSV_WRITE_OFS'
+         */
         template <typename ItemType, typename OutputFunType>
         static void write(std::ofstream &ofs, const std::vector<ItemType> &data, const OutputFunType &outputFun)
         {
@@ -473,6 +495,9 @@ namespace ns_csv
             return;
         }
 
+        /**
+         * @brief for 'CSV_WRITE_OFS_H'
+         */
         template <typename ItemType, std::size_t LabelNum, typename OutputFunType>
         static void write(std::ofstream &ofs, const std::array<std::string, LabelNum> &header,
                           const std::vector<ItemType> &data, char splitor, const OutputFunType &outputFun)
@@ -483,6 +508,9 @@ namespace ns_csv
             return;
         }
 
+        /**
+         * @brief for 'CSV_WRITE_FILE'
+         */
         template <typename ItemType, typename OutputFunType>
         static void write(const std::string &fileName, const std::vector<ItemType> &data, const OutputFunType &outputFun)
         {
@@ -493,6 +521,9 @@ namespace ns_csv
             return;
         }
 
+        /**
+         * @brief for 'CSV_WRITE_FILE_H'
+         */
         template <typename ItemType, std::size_t LabelNum, typename OutputFunType>
         static void write(const std::string &fileName, const std::array<std::string, LabelNum> &header,
                           const std::vector<ItemType> &data, char splitor, const OutputFunType &outputFun)
@@ -505,6 +536,9 @@ namespace ns_csv
             return;
         }
 
+        /**
+         * @brief read the header's leabes
+         */
         template <std::size_t LabelNum>
         static std::array<std::string, LabelNum> readHeader(std::ifstream &ifs, char splitor)
         {
@@ -517,6 +551,9 @@ namespace ns_csv
             return header;
         }
 
+        /**
+         * @brief write the header's leabes
+         */
         template <std::size_t LabelNum>
         static void writeHeader(std::ofstream &ofs, const std::array<std::string, LabelNum> &header, char splitor)
         {
