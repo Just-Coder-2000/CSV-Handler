@@ -17,24 +17,43 @@
 #include <array>
 
 /**
- * @brief macroes you can use:
+ * @brief methods you can use:
  * 
  * @attention for csv reading
- * [1] CSV_READ_FILE(fileName, splitor, itemType, ...)
- * [2] CSV_READ_IFS_ALL(ifstream, splitor, itemType, ...)
- * [3] CSV_READ_IFS_CER(ifstream, splitor, itemNum, itemType, ...)
+ * [1.1] CSV_READ_FILE(fileName, splitor, itemType, ...)
+ * [1.2] CSV_READ_FILE_H(fileName, splitor, itemType, ...)
+ * 
+ * [2.1] CSV_READ_IFS_ALL(ifstream, splitor, itemType, ...)
+ * [2.2] CSV_READ_IFS_ALL_H(ifstream, splitor, itemType, ...)
+ * 
+ * [3.1] CSV_READ_IFS_CER(ifstream, splitor, itemNum, itemType, ...)
+ * [3.2] CSV_READ_IFS_CER_H(ifstream, splitor, itemNum, itemType, ...)
+ * 
+ * [4.1] CSVReader[IFS]
+ * [4.2] CSVReader[FILE]
  * 
  * @attention for csv writing
- * [1] CSV_WRITE_OFS(ofstream, data, splitor, itemType, ...)
- * [2] CSV_WRITE_FILE(fileName, data, splitor, itemType, ...)
+ * [1.1] CSV_WRITE_OFS(ofstream, data, splitor, itemType, ...)
+ * [1.2] CSV_WRITE_OFS_H(ofstream, header, data, splitor, itemType, ...)
+ * 
+ * [2.1] CSV_WRITE_FILE(fileName, data, splitor, itemType, ...)
+ * [2.2] CSV_WRITE_FILE_H(fileName, header, data, splitor, itemType, ...)
+ * 
+ * [3.1] CSVWriter[OFS]
+ * [3.2] CSVWriter[FILE]
+ * 
+ * @attention helpers:
+ * [1] CSV_HEADER(...)
  */
 
 namespace ns_csv
 {
+
+#pragma region macro apis
     /**
      * @brief read all items in the ifstream
      * 
-     * @param ifstream the input fstream
+     * @param fileName the file name
      * @param splitor the splitor
      * @param itemType the type of the item in the csv file
      * @param ... the types of the members,
@@ -51,7 +70,7 @@ namespace ns_csv
     /**
      * @brief read all items in the ifstream
      * 
-     * @param ifstream the input fstream
+     * @param fileName the file name
      * @param splitor the splitor
      * @param itemType the type of the item in the csv file
      * @param ... the types of the members,
@@ -207,6 +226,9 @@ namespace ns_csv
 #define CSV_HEADER(...) \
     std::array<std::string, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)> { __VA_ARGS__ }
 
+#pragma endregion
+
+#pragma region macro helpers
     /**
      * @brief define for macro 'MAKE_APIR'
      * 
@@ -359,6 +381,9 @@ namespace ns_csv
     stream >> VAL;      \
     stream.clear();
 
+#pragma endregion
+
+#pragma region variable template params
     template <typename... Args>
     struct __ElemTypeTrait;
 
@@ -390,6 +415,34 @@ namespace ns_csv
         }
     };
 
+#pragma endregion
+
+#pragma region main class
+
+    /**
+     * \brief a function to split a string to some string elements according the splitor
+     * \param str the string to be splited
+     * \param splitor the splitor char
+     * \param ignoreEmpty whether ignoring the empty string element or not
+     * \return the splited string vector
+     */
+    static std::vector<std::string> split(const std::string &str, char splitor, bool ignoreEmpty = true)
+    {
+        std::vector<std::string> vec;
+        auto iter = str.cbegin();
+        while (true)
+        {
+            auto pos = std::find(iter, str.cend(), splitor);
+            auto elem = std::string(iter, pos);
+            if ((!ignoreEmpty) || (ignoreEmpty && !elem.empty()))
+                vec.push_back(elem);
+            if (pos == str.cend())
+                break;
+            iter = ++pos;
+        }
+        return vec;
+    }
+
     class CSVHandler
     {
     private:
@@ -409,7 +462,7 @@ namespace ns_csv
             {
                 if (std::getline(ifs, strline))
                 {
-                    auto strVec = CSVHandler::split(strline, splitor);
+                    auto strVec = split(strline, splitor);
                     auto params = __ElemTypeTrait<ElemTypes...>::gen(strVec.begin());
                     data.push_back(unpackFun(params));
                     ++itemCount;
@@ -434,7 +487,7 @@ namespace ns_csv
             {
                 if (std::getline(ifs, strline))
                 {
-                    auto strVec = CSVHandler::split(strline, splitor);
+                    auto strVec = split(strline, splitor);
                     auto params = __ElemTypeTrait<ElemTypes...>::gen(strVec.begin());
                     data.push_back(unpackFun(params));
                     ++itemCount;
@@ -456,7 +509,7 @@ namespace ns_csv
             std::string strline;
             while (std::getline(ifs, strline))
             {
-                auto strVec = CSVHandler::split(strline, splitor);
+                auto strVec = split(strline, splitor);
                 auto params = __ElemTypeTrait<ElemTypes...>::gen(strVec.begin());
                 data.push_back(unpackFun(params));
             }
@@ -476,7 +529,7 @@ namespace ns_csv
             std::string strline;
             while (std::getline(ifs, strline))
             {
-                auto strVec = CSVHandler::split(strline, splitor);
+                auto strVec = split(strline, splitor);
                 auto params = __ElemTypeTrait<ElemTypes...>::gen(strVec.begin());
                 data.push_back(unpackFun(params));
             }
@@ -562,30 +615,97 @@ namespace ns_csv
             ofs << header[LabelNum - 1] << '\n';
             return;
         }
+    };
 
+    class CSVReader
+    {
     private:
-        /**
-         * \brief a function to split a string to some string elements according the splitor
-         * \param str the string to be splited
-         * \param splitor the splitor char
-         * \param ignoreEmpty whether ignoring the empty string element or not
-         * \return the splited string vector
-         */
-        static std::vector<std::string> split(const std::string &str, char splitor, bool ignoreEmpty = true)
+        std::string _curStr;
+        std::ifstream *_ifs;
+        bool _isNewIFS;
+
+    public:
+        CSVReader() = delete;
+
+        CSVReader(const std::string &fileName)
         {
-            std::vector<std::string> vec;
-            auto iter = str.cbegin();
-            while (true)
+            this->_ifs = new std::ifstream(fileName);
+            this->_isNewIFS = true;
+        }
+
+        CSVReader(std::ifstream &ifs) : _ifs(&ifs) { this->_isNewIFS = false; }
+
+        CSVReader(const CSVReader &) = delete;
+
+        ~CSVReader()
+        {
+            if (this->_isNewIFS)
             {
-                auto pos = std::find(iter, str.cend(), splitor);
-                auto elem = std::string(iter, pos);
-                if ((!ignoreEmpty) || (ignoreEmpty && !elem.empty()))
-                    vec.push_back(elem);
-                if (pos == str.cend())
-                    break;
-                iter = ++pos;
+                this->_ifs->close();
+                delete this->_ifs;
             }
-            return vec;
+        }
+        /**
+         * @brief judge whether there is another item next
+         */
+        bool hasNext() { return static_cast<bool>(std::getline(*(this->_ifs), this->_curStr)); }
+
+        /**
+         * @brief get next std::string vector
+         */
+        std::vector<std::string> next(char splitor = ',') const { return split(this->_curStr, splitor); }
+    };
+
+    class CSVWriter
+    {
+    private:
+        std::ofstream *_ofs;
+        bool _isNewOFS;
+
+    public:
+        CSVWriter() = delete;
+
+        CSVWriter(const std::string &fileName)
+        {
+            this->_ofs = new std::ofstream(fileName);
+            this->_isNewOFS = true;
+        }
+
+        CSVWriter(std::ofstream &ofs) : _ofs(&ofs) { this->_isNewOFS = false; }
+
+        CSVWriter(const CSVWriter &) = delete;
+
+        ~CSVWriter()
+        {
+            if (this->_isNewOFS)
+            {
+                this->_ofs->close();
+                delete this->_ofs;
+            }
+        }
+
+        /**
+         * @brief use variable template parameters to write any num arguements
+         */
+        template <typename Type, typename... Else>
+        void writeItems(char splitor, const Type &argv, const Else &...argvs)
+        {
+            *(this->_ofs) << argv << splitor;
+            this->writeItems(splitor, argvs...);
+            return;
+        }
+
+        template <typename Type>
+        void writeItems(char splitor, const Type &argv)
+        {
+            *(this->_ofs) << argv << '\n';
+            return;
+        }
+
+        void writeItems()
+        {
+            return;
         }
     };
+#pragma endregion
 } // namespace ns_csv
