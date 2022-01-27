@@ -9,6 +9,7 @@
 
 #include "csv.h"
 #include "artwork/logger/logger.h"
+#include "artwork/geometry/point.hpp"
 
 #pragma region helpers
 
@@ -67,6 +68,16 @@ void test_CSV_READ_IFS_ALL()
     ifs.close();
 }
 
+void test_CSV_READ_IFS_ALL_H()
+{
+    INFO("test the macro 'CSV_READ_IFS_ALL_H', file '../data/refpoint3f.csv'");
+    std::ifstream ifs("../data/refpoint3f.csv");
+    auto data = CSV_READ_IFS_ALL_H(ifs, ',', ns_geo::RefPoint3f, uint, float, float, float);
+    INFO("header: ", data.first.at(0), ',', data.first.at(1), ',', data.first.at(2), ',', data.first.at(3));
+    vecOutput(data.second);
+    ifs.close();
+}
+
 void test_CSV_READ_IFS_CER()
 {
     INFO("test the macro 'CSV_READ_IFS_CER', file '../data/info.csv'");
@@ -76,9 +87,91 @@ void test_CSV_READ_IFS_CER()
     ifs.close();
 }
 
+void test_CSV_READ_IFS_CER_H()
+{
+    INFO("test the macro 'CSV_READ_IFS_CER_H', file '../data/refpoint3f.csv'");
+    std::ifstream ifs("../data/refpoint3f.csv");
+    auto data = CSV_READ_IFS_CER_H(ifs, ',', 4, ns_geo::RefPoint3f, uint, float, float, float);
+    INFO("header: ", data.first.at(0), ',', data.first.at(1), ',', data.first.at(2), ',', data.first.at(3));
+    vecOutput(data.second);
+    ifs.close();
+}
+
+void test_CSV_READ_FILE()
+{
+    INFO("test the macro 'CSV_READ_FILE', file '../data/info.csv'");
+    auto data = CSV_READ_FILE("../data/info.csv", ',', Info, int, std::string, float);
+    vecOutput(data);
+}
+
+void test_CSV_READ_FILE_H()
+{
+    INFO("test the macro 'CSV_READ_FILE_H', file '../data/refpoint3f.csv'");
+    auto data = CSV_READ_FILE_H("../data/refpoint3f.csv", ',', ns_geo::RefPoint3f, uint, float, float, float);
+    INFO("header: ", data.first.at(0), ',', data.first.at(1), ',', data.first.at(2), ',', data.first.at(3));
+    vecOutput(data.second);
+}
+
+void test_CSV_WRITE_OFS()
+{
+    INFO("test the macro 'CSV_WRITE_OFS', file '../data/point3f.csv'");
+    auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    std::ofstream ofs("../data/point3f.csv");
+    CSV_WRITE_OFS(ofs, ps, ',', ns_geo::Point3f,
+                  ELEM_ON(x()) * ELEM_ON(z()),
+                  ELEM_ON(x()) + ELEM_ON(y()),
+                  ELEM_ON(y()) - ELEM_ON(z()),
+                  ELEM_ON(z()) * ELEM_ON(y()));
+    ofs.close();
+}
+
+void test_CSV_WRITE_OFS_H()
+{
+    INFO("test the macro 'CSV_WRITE_OFS_H', file '../data/point3f.csv'");
+    auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    std::ofstream ofs("../data/point3f.csv");
+    CSV_WRITE_OFS_H(ofs, HEADER("x+z", "x+y", "y-z", "z-y"), ps, ',', ns_geo::Point3f,
+                    ELEM_ON(x()) * ELEM_ON(z()),
+                    ELEM_ON(x()) + ELEM_ON(y()),
+                    ELEM_ON(y()) - ELEM_ON(z()),
+                    ELEM_ON(z()) * ELEM_ON(y()));
+    auto header = HEADER("x+z", "x+y", "y-z", "z-y");
+    ofs.close();
+}
+
+void test_CSV_WRITE_FILE()
+{
+    INFO("test the macro 'CSV_WRITE_FILE', file '../data/point3f.csv'");
+    auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    CSV_WRITE_FILE("../data/point3f.csv", ps, ',', ns_geo::Point3f,
+                   ELEM_ON(x()) * ELEM_ON(z()),
+                   ELEM_ON(x()) + ELEM_ON(y()),
+                   ELEM_ON(y()) - ELEM_ON(z()),
+                   ELEM_ON(z()) * ELEM_ON(y()));
+}
+
+void test_CSV_WRITE_FILE_H()
+{
+    INFO("test the macro 'CSV_WRITE_FILE_H', file '../data/point3f.csv'");
+    auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    CSV_WRITE_FILE_H("../data/point3f.csv", HEADER("x+z", "x+y", "y-z", "z-y"), ps, ',', ns_geo::Point3f,
+                     ELEM_ON(x()) * ELEM_ON(z()),
+                     ELEM_ON(x()) + ELEM_ON(y()),
+                     ELEM_ON(y()) - ELEM_ON(z()),
+                     ELEM_ON(z()) * ELEM_ON(y()));
+}
+
 int main(int argc, char const *argv[])
 {
-    ::test_CSV_READ_IFS_ALL();
-    ::test_CSV_READ_IFS_CER();
+    // ::test_CSV_READ_IFS_ALL();
+    // ::test_CSV_READ_IFS_ALL_H();
+    // ::test_CSV_READ_IFS_CER();
+    // ::test_CSV_READ_IFS_CER_H();
+    // ::test_CSV_READ_FILE();
+    // ::test_CSV_READ_FILE_H();
+    // ::test_CSV_WRITE_OFS();
+    // ::test_CSV_WRITE_OFS_H();
+    // ::test_CSV_WRITE_FILE();
+    // test_CSV_WRITE_FILE_H();
     return 0;
 }
