@@ -189,6 +189,18 @@ namespace ns_csv
         return;                                                                 \
     }(ofs, data, splitor)
 
+/**
+ * @brief write data to a csv file
+ * 
+ * @param osftream the out fstream
+ * @param data the data array
+ * @param header the header labels
+ * @param splitor the splitor
+ * @param itemType the type of item
+ * @param ... the [methods | member name] to get members from a item
+ * 
+ * @return void
+ */
 #define CSV_WRITE_OFS_H(ofs, header, data, splitor, itemType, ...)                                            \
     [](std::ofstream &ofs, const ARRAY(__VA_ARGS__) & h, const std::vector<itemType> &d, char spor) -> void { \
         ns_csv::ns_priv::__print__(ofs, spor, h);                                                             \
@@ -293,9 +305,9 @@ namespace ns_csv
 
 #define ARRAY(...) std::array<std::string, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)>
 
-#define ELEM_ON(method) elem.method
+#define CSV_ELEM(method) elem.method
 
-#define HEADER(...) \
+#define CSV_HEADER(...) \
     ARRAY(__VA_ARGS__) { __VA_ARGS__ }
 
 #pragma endregion
