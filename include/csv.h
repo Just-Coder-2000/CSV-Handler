@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <fstream>
 
-namespace ns_log
+namespace ns_csv
 {
 #pragma region csv read
 
@@ -28,7 +28,7 @@ namespace ns_log
         std::string strLine;                                            \
         while (std::getline(ifs, strLine))                              \
         {                                                               \
-            auto strVec = ns_log::ns_priv::split(strLine, spor);        \
+            auto strVec = ns_csv::ns_priv::split(strLine, spor);        \
             data.push_back(itemType{LAMBDA_PACK(strVec, __VA_ARGS__)}); \
         }                                                               \
         return data;                                                    \
@@ -55,7 +55,7 @@ namespace ns_log
         {                                                                   \
             if (std::getline(ifs, strLine))                                 \
             {                                                               \
-                auto strVec = ns_log::ns_priv::split(strLine, spor);        \
+                auto strVec = ns_csv::ns_priv::split(strLine, spor);        \
                 data.push_back(itemType{LAMBDA_PACK(strVec, __VA_ARGS__)}); \
             }                                                               \
             else                                                            \
@@ -93,20 +93,21 @@ namespace ns_log
             return vec;
         }
 
+        static std::stringstream strStream;
+
     } // namespace ns_priv
 
-#define STR_TRANS(str, val)      \
-    std::stringstream strStream; \
-    strStream << str;            \
-    strStream >> val;            \
+#define STR_TRANS(strStream, str, val) \
+    strStream << str;                  \
+    strStream >> val;                  \
     strStream.clear();
 
-#define LAMBDA_TRANS(srcStr, dstType)        \
-    [&](const std::string &str) -> dstType { \
-        dstType val;                         \
-        STR_TRANS(srcStr, val);              \
-        return val;                          \
-    }(srcStr)
+#define LAMBDA_TRANS(srcStr, dstType)                                     \
+    [](std::stringstream &strStream, const std::string &str) -> dstType { \
+        dstType val;                                                      \
+        STR_TRANS(strStream, str, val);                                \
+        return val;                                                       \
+    }(ns_csv::ns_priv::strStream, srcStr)
 
 #define MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, N, ...) N
 #define COUNT_MACRO_VAR_ARGS(...) MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
@@ -132,4 +133,4 @@ namespace ns_log
 #define LAMBDA_PACK_1(strVec, dstType) LAMBDA_TRANS(strVec.at(strVec.size() - 1), dstType)
 
 #pragma endregion
-} // namespace ns_log
+} // namespace ns_csv
