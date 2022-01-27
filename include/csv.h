@@ -1,5 +1,14 @@
 #pragma once
 
+/**
+ * @file csv.h
+ * @author csl (3079625093@qq.com)
+ * @version 0.1
+ * @date 2022-01-27
+ * 
+ * @copyright Copyright (c) 2022
+ */
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -293,6 +302,94 @@ namespace ns_csv
         }
 
     } // namespace ns_priv
+
+#pragma region csv reader and write
+    class CSVReader
+    {
+    private:
+        std::ifstream *_ifs;
+        bool _isNewIFS;
+        bool _hasContext;
+        std::string _curStr;
+
+    public:
+        CSVReader() = delete;
+
+        CSVReader(const std::string &fileName)
+            : _ifs(new std::ifstream(fileName)), _isNewIFS(true), _hasContext(false) {}
+
+        CSVReader(std::ifstream &ifs) : _ifs(&ifs), _isNewIFS(false), _hasContext(false) {}
+
+        CSVReader(const CSVReader &) = delete;
+
+        ~CSVReader()
+        {
+            if (this->_isNewIFS)
+            {
+                this->_ifs->close();
+                delete this->_ifs;
+            }
+        }
+        /**
+         * @brief judge whether there is another item next
+         */
+        bool hasNext()
+        {
+            auto b = static_cast<bool>(std::getline(*(this->_ifs), this->_curStr));
+            _hasContext = true;
+            return b;
+        }
+
+        /**
+         * @brief get next std::string vector
+         */
+        std::vector<std::string> next(char splitor = ',')
+        {
+            if (!_hasContext)
+                std::getline(*(this->_ifs), this->_curStr);
+            return ns_priv::split(this->_curStr, splitor);
+        }
+    };
+
+    class CSVWriter
+    {
+    private:
+        std::ofstream *_ofs;
+        bool _isNewOFS;
+
+    public:
+        CSVWriter() = delete;
+
+        CSVWriter(const std::string &fileName)
+        {
+            this->_ofs = new std::ofstream(fileName);
+            this->_isNewOFS = true;
+        }
+
+        CSVWriter(std::ofstream &ofs) : _ofs(&ofs) { this->_isNewOFS = false; }
+
+        CSVWriter(const CSVWriter &) = delete;
+
+        ~CSVWriter()
+        {
+            if (this->_isNewOFS)
+            {
+                this->_ofs->close();
+                delete this->_ofs;
+            }
+        }
+
+        /**
+         * @brief use variable template parameters to write any num arguements
+         */
+        template <typename... Types>
+        void writeItems(char splitor, const Types &...argvs)
+        {
+            ns_priv::__print__(*(this->_ofs), splitor, argvs...);
+            return;
+        }
+    };
+#pragma endregion
 
 #pragma region help macroes
 

@@ -9,8 +9,8 @@ This is a library implemented with cpp macros to read and write CSV files. It is
 ```txt
                         ____ ______     __  _   _                 _ _           
                         / ___/ ___\ \   / / | | | | __ _ _ __   __| | | ___ _ __ 
-                    | |   \___ \\ \ / /  | |_| |/ _` | '_ \ / _` | |/ _ \ '__|
-                    | |___ ___) |\ V /   |  _  | (_| | | | | (_| | |  __/ |   
+                        | |   \___ \\ \ / /  | |_| |/ _` | '_ \ / _` | |/ _ \ '__|
+                        | |___ ___) |\ V /   |  _  | (_| | | | | (_| | |  __/ |   
                         \____|____/  \_/    |_| |_|\__,_|_| |_|\__,_|_|\___|_|   
 ```
 
@@ -18,7 +18,40 @@ This is a library implemented with cpp macros to read and write CSV files. It is
 
 + ___CSVReader[IFS]___
 
+```cpp
+void test_CSVReader_IFS()
+{
+    INFO("test the ns_csv::CSVReader[IFS], file '../data/info.csv'");
+
+    std::ifstream ifs("../data/info.csv");
+    ns_csv::CSVReader readerIFS(ifs);
+
+    while (readerIFS.hasNext())
+    {
+        auto items = readerIFS.next();
+        Info obj(std::stoi(items.at(0)), items.at(1), std::stof(items.at(2)));
+        std::cout << obj << std::endl;
+    }
+    ifs.close();
+}
+```
+
 + ___CSVReader[FILE]___
+
+```cpp
+void test_CSVReader_FILE()
+{
+    INFO("test the ns_csv::CSVReader[FILE], file '../data/info.csv'");
+
+    ns_csv::CSVReader reader("../data/info.csv");
+    while (reader.hasNext())
+    {
+        auto items = reader.next();
+        Info obj(std::stoi(items.at(0)), items.at(1), std::stof(items.at(2)));
+        std::cout << obj << std::endl;
+    }
+}
+```
 
 + ___CSV_READ_FILE(fileName, splitor, itemType, ...)___
 
@@ -149,7 +182,41 @@ void test_CSV_READ_IFS_CER_H()
 
 + ___CSVWriter[OFS]___
 
+```cpp
+void test_CSVWriter_OFS()
+{
+    INFO("test the ns_csv::CSVWriter[OFS], file '../data/info.csv'");
+
+    auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+
+    std::ofstream ofs("../data/point3f.csv");
+    ns_csv::CSVWriter writer(ofs);
+
+    writer.writeItems(',', "x+z", "x+y", "y-z", "z-y");
+
+    for (const auto &p : ps)
+        writer.writeItems(',', p.x(), p.y(), p.z());
+
+    ofs.close();
+}
+```
+
 + ___CSVWriter[FILE]___
+
+```cpp
+void test_CSVWriter_FILE()
+{
+    INFO("test the ns_csv::CSVWriter[FILE], file '../data/info.csv'");
+
+    auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    ns_csv::CSVWriter writer("../data/point3f.csv");
+
+    writer.writeItems(',', "x+z", "x+y", "y-z", "z-y");
+
+    for (const auto &p : ps)
+        writer.writeItems(',', p.x(), p.y(), p.z());
+}
+```
 
 + ___CSV_HEADER(...)___
 
