@@ -97,17 +97,7 @@ namespace ns_csv
 
     } // namespace ns_priv
 
-#define STR_TRANS(strStream, str, val) \
-    strStream << str;                  \
-    strStream >> val;                  \
-    strStream.clear();
-
-#define LAMBDA_TRANS(srcStr, dstType)                                     \
-    [](std::stringstream &strStream, const std::string &str) -> dstType { \
-        dstType val;                                                      \
-        STR_TRANS(strStream, str, val);                                \
-        return val;                                                       \
-    }(ns_csv::ns_priv::strStream, srcStr)
+#pragma region help macroes
 
 #define MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, N, ...) N
 #define COUNT_MACRO_VAR_ARGS(...) MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
@@ -116,7 +106,21 @@ namespace ns_csv
 #define MACRO_COMBINE_1(MACRO, ARGS_COUNT) MACRO_COMBINE_2(MACRO, ARGS_COUNT)
 #define MACRO_COMBINE(MACRO, ARGS_COUNT) MACRO_COMBINE_1(MACRO, ARGS_COUNT)
 
-#pragma region lambda_pack macro
+#pragma endregion
+
+#pragma region read macroes
+
+#define STR_TRANS(strStream, str, val) \
+    strStream << str;                  \
+    strStream >> val;                  \
+    strStream.clear();
+
+#define LAMBDA_TRANS(srcStr, dstType)                                     \
+    [](std::stringstream &strStream, const std::string &str) -> dstType { \
+        dstType val;                                                      \
+        STR_TRANS(strStream, str, val);                                   \
+        return val;                                                       \
+    }(ns_csv::ns_priv::strStream, srcStr)
 
 #define LAMBDA_PACK(strVec, ...)                                   \
     MACRO_COMBINE(LAMBDA_PACK_, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)) \
