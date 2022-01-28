@@ -186,36 +186,34 @@ namespace ns_csv
  * @param ofs the out fstream
  * @param data the data array
  * @param splitor the splitor
- * @param itemType the type of item
  * @param ... the [methods | member name] to get members from a item
  * 
  * @return void
  */
-#define CSV_WRITE_OFS(ofs, data, splitor, itemType, ...)                        \
-    [](std::ofstream &ofs, const std::vector<itemType> &d, char spor) -> void { \
-        for (const auto &elem : d)                                              \
-            ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);                 \
-        return;                                                                 \
+#define CSV_WRITE_OFS(ofs, data, splitor, ...)                           \
+    [](std::ofstream &ofs, const decltype(data) &d, char spor) -> void { \
+        for (const auto &elem : d)                                       \
+            ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);          \
+        return;                                                          \
     }(ofs, data, splitor)
 
 /**
  * @brief write data to a csv file
  * 
  * @param osftream the out fstream
- * @param data the data array
  * @param header the header labels
+ * @param data the data array
  * @param splitor the splitor
- * @param itemType the type of item
  * @param ... the [methods | member name] to get members from a item
  * 
  * @return void
  */
-#define CSV_WRITE_OFS_H(ofs, header, data, splitor, itemType, ...)                                            \
-    [](std::ofstream &ofs, const ARRAY(__VA_ARGS__) & h, const std::vector<itemType> &d, char spor) -> void { \
-        ns_csv::ns_priv::__print__(ofs, spor, h);                                                             \
-        for (const auto &elem : d)                                                                            \
-            ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);                                               \
-        return;                                                                                               \
+#define CSV_WRITE_OFS_H(ofs, header, data, splitor, ...)                                               \
+    [](std::ofstream &ofs, const ARRAY(__VA_ARGS__) & h, const decltype(data) &d, char spor) -> void { \
+        ns_csv::ns_priv::__print__(ofs, spor, h);                                                      \
+        for (const auto &elem : d)                                                                     \
+            ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);                                        \
+        return;                                                                                        \
     }(ofs, header, data, splitor)
 
 /**
@@ -224,28 +222,38 @@ namespace ns_csv
  * @param fileName the file name
  * @param data the data array
  * @param splitor the splitor
- * @param itemType the type of item
  * @param ... the [methods | member name] to get members from a item
  * 
  * @return void
  */
-#define CSV_WRITE_FILE(fileName, data, splitor, itemType, ...)                       \
-    [](const std::string &name, const std::vector<itemType> &d, char spor) -> void { \
-        std::ofstream ofs(name);                                                     \
-        for (const auto &elem : d)                                                   \
-            ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);                      \
-        ofs.close();                                                                 \
-        return;                                                                      \
+#define CSV_WRITE_FILE(fileName, data, splitor, ...)                          \
+    [](const std::string &name, const decltype(data) &d, char spor) -> void { \
+        std::ofstream ofs(name);                                              \
+        for (const auto &elem : d)                                            \
+            ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);               \
+        ofs.close();                                                          \
+        return;                                                               \
     }(fileName, data, splitor)
 
-#define CSV_WRITE_FILE_H(fileName, header, data, splitor, itemType, ...)                                           \
-    [](const std::string &name, const ARRAY(__VA_ARGS__) & h, const std::vector<itemType> &d, char spor) -> void { \
-        std::ofstream ofs(name);                                                                                   \
-        ns_csv::ns_priv::__print__(ofs, spor, h);                                                                  \
-        for (const auto &elem : d)                                                                                 \
-            ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);                                                    \
-        ofs.close();                                                                                               \
-        return;                                                                                                    \
+/**
+ * @brief write data to a csv file
+ * 
+ * @param fileName the file name
+ * @param header the header labels
+ * @param data the data array
+ * @param splitor the splitor
+ * @param ... the [methods | member name] to get members from a item
+ * 
+ * @return void
+ */
+#define CSV_WRITE_FILE_H(fileName, header, data, splitor, ...)                                              \
+    [](const std::string &name, const ARRAY(__VA_ARGS__) & h, const decltype(data) &d, char spor) -> void { \
+        std::ofstream ofs(name);                                                                            \
+        ns_csv::ns_priv::__print__(ofs, spor, h);                                                           \
+        for (const auto &elem : d)                                                                          \
+            ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);                                             \
+        ofs.close();                                                                                        \
+        return;                                                                                             \
     }(fileName, header, data, splitor)
 
 #pragma endregion
@@ -260,7 +268,7 @@ namespace ns_csv
          * \param ignoreEmpty whether ignoring the empty string element or not
          * \return the splited string vector
          */
-        std::vector<std::string> split(const std::string &str, char splitor, bool ignoreEmpty = true)
+        static std::vector<std::string> split(const std::string &str, char splitor, bool ignoreEmpty = true)
         {
             std::vector<std::string> vec;
             auto iter = str.cbegin();
