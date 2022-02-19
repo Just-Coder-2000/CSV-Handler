@@ -49,6 +49,7 @@ std::ostream &operator<<(std::ostream &os, const Info &obj) {
   return os;
 }
 
+
 template <typename ElemType>
 void vecOutput(const std::vector<ElemType> &vec) {
   for (const auto &elem : vec) std::cout << elem << '\n';
@@ -57,7 +58,7 @@ void vecOutput(const std::vector<ElemType> &vec) {
 #pragma endregion
 
 void test_CSV_READ_IFS_ALL() {
-  INFO("test the macro 'CSV_READ_IFS_ALL', file '../data/info.csv'");
+  ns_log::info("test the macro 'CSV_READ_IFS_ALL', file '../data/info.csv'");
   std::ifstream ifs("../data/info.csv");
   auto data = CSV_READ_IFS_ALL(ifs, ',', Info, int, std::string, float);
   vecOutput(data);
@@ -65,18 +66,18 @@ void test_CSV_READ_IFS_ALL() {
 }
 
 void test_CSV_READ_IFS_ALL_H() {
-  INFO("test the macro 'CSV_READ_IFS_ALL_H', file '../data/refpoint3f.csv'");
+  ns_log::info("test the macro 'CSV_READ_IFS_ALL_H', file '../data/refpoint3f.csv'");
   std::ifstream ifs("../data/refpoint3f.csv");
   auto data = CSV_READ_IFS_ALL_H(ifs, ',', ns_geo::RefPoint3f, uint, float,
                                  float, float);
-  INFO("header: ", data.first.at(0), ',', data.first.at(1), ',',
+  ns_log::info("header: ", data.first.at(0), ',', data.first.at(1), ',',
        data.first.at(2), ',', data.first.at(3));
   vecOutput(data.second);
   ifs.close();
 }
 
 void test_CSV_READ_IFS_CER() {
-  INFO("test the macro 'CSV_READ_IFS_CER', file '../data/info.csv'");
+  ns_log::info("test the macro 'CSV_READ_IFS_CER', file '../data/info.csv'");
   std::ifstream ifs("../data/info.csv");
   auto data = CSV_READ_IFS_CER(ifs, ',', 4, Info, int, std::string, float);
   vecOutput(data);
@@ -84,34 +85,34 @@ void test_CSV_READ_IFS_CER() {
 }
 
 void test_CSV_READ_IFS_CER_H() {
-  INFO("test the macro 'CSV_READ_IFS_CER_H', file '../data/refpoint3f.csv'");
+  ns_log::info("test the macro 'CSV_READ_IFS_CER_H', file '../data/refpoint3f.csv'");
   std::ifstream ifs("../data/refpoint3f.csv");
   auto data = CSV_READ_IFS_CER_H(ifs, ',', 4, ns_geo::RefPoint3f, uint, float,
                                  float, float);
-  INFO("header: ", data.first.at(0), ',', data.first.at(1), ',',
+  ns_log::info("header: ", data.first.at(0), ',', data.first.at(1), ',',
        data.first.at(2), ',', data.first.at(3));
   vecOutput(data.second);
   ifs.close();
 }
 
 void test_CSV_READ_FILE() {
-  INFO("test the macro 'CSV_READ_FILE', file '../data/info.csv'");
+  ns_log::info("test the macro 'CSV_READ_FILE', file '../data/info.csv'");
   auto data =
       CSV_READ_FILE("../data/info.csv", ',', Info, int, std::string, float);
   vecOutput(data);
 }
 
 void test_CSV_READ_FILE_H() {
-  INFO("test the macro 'CSV_READ_FILE_H', file '../data/refpoint3f.csv'");
+  ns_log::info("test the macro 'CSV_READ_FILE_H', file '../data/refpoint3f.csv'");
   auto data = CSV_READ_FILE_H("../data/refpoint3f.csv", ',', ns_geo::RefPoint3f,
                               uint, float, float, float);
-  INFO("header: ", data.first.at(0), ',', data.first.at(1), ',',
+  ns_log::info("header: ", data.first.at(0), ',', data.first.at(1), ',',
        data.first.at(2), ',', data.first.at(3));
   vecOutput(data.second);
 }
 
 void test_CSV_WRITE_OFS() {
-  INFO("test the macro 'CSV_WRITE_OFS', file '../data/point3f.csv'");
+  ns_log::info("test the macro 'CSV_WRITE_OFS', file '../data/point3f.csv'");
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);
   std::ofstream ofs("../data/point3f.csv");
@@ -122,7 +123,7 @@ void test_CSV_WRITE_OFS() {
 }
 
 void test_CSV_WRITE_OFS_H() {
-  INFO("test the macro 'CSV_WRITE_OFS_H', file '../data/point3f.csv'");
+  ns_log::info("test the macro 'CSV_WRITE_OFS_H', file '../data/point3f.csv'");
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);
   std::ofstream ofs("../data/point3f.csv");
@@ -134,7 +135,7 @@ void test_CSV_WRITE_OFS_H() {
 }
 
 void test_CSV_WRITE_FILE() {
-  INFO("test the macro 'CSV_WRITE_FILE', file '../data/point3f.csv'");
+  ns_log::info("test the macro 'CSV_WRITE_FILE', file '../data/point3f.csv'");
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);
   CSV_WRITE_FILE("../data/point3f.csv", ps, ',', CSV_ELEM(x()) * CSV_ELEM(z()),
@@ -143,7 +144,7 @@ void test_CSV_WRITE_FILE() {
 }
 
 void test_CSV_WRITE_FILE_H() {
-  INFO("test the macro 'CSV_WRITE_FILE_H', file '../data/point3f.csv'");
+  ns_log::info("test the macro 'CSV_WRITE_FILE_H', file '../data/point3f.csv'");
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);
   CSV_WRITE_FILE_H(
@@ -153,7 +154,7 @@ void test_CSV_WRITE_FILE_H() {
 }
 
 void test_CSVReader_IFS() {
-  INFO("test the ns_csv::CSVReader[IFS], file '../data/info.csv'");
+  ns_log::info("test the ns_csv::CSVReader[IFS], file '../data/info.csv'");
 
   std::ifstream ifs("../data/info.csv");
   ns_csv::CSVReader readerIFS(ifs);
@@ -167,7 +168,7 @@ void test_CSVReader_IFS() {
 }
 
 void test_CSVReader_FILE() {
-  INFO("test the ns_csv::CSVReader[FILE], file '../data/info.csv'");
+  ns_log::info("test the ns_csv::CSVReader[FILE], file '../data/info.csv'");
 
   ns_csv::CSVReader reader("../data/info.csv");
   while (reader.hasNext()) {
@@ -178,7 +179,7 @@ void test_CSVReader_FILE() {
 }
 
 void test_CSVWriter_OFS() {
-  INFO("test the ns_csv::CSVWriter[OFS], file '../data/info.csv'");
+  ns_log::info("test the ns_csv::CSVWriter[OFS], file '../data/info.csv'");
 
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);
@@ -194,7 +195,7 @@ void test_CSVWriter_OFS() {
 }
 
 void test_CSVWriter_FILE() {
-  INFO("test the ns_csv::CSVWriter[FILE], file '../data/info.csv'");
+  ns_log::info("test the ns_csv::CSVWriter[FILE], file '../data/info.csv'");
 
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);

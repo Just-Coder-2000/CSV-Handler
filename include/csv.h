@@ -17,6 +17,11 @@
 #include <string>
 #include <vector>
 
+static std::stringstream &operator>>(std::stringstream &os, std::string &str) {
+  str = os.str();
+  return os;
+}
+
 namespace ns_csv {
 #pragma region csv read
 
@@ -256,130 +261,134 @@ namespace ns_csv {
 
 #pragma endregion
 
-namespace ns_priv {
+  namespace ns_priv {
 
-/**
- * \brief a function to split a string to some string elements according the
- * splitor \param str the string to be splited \param splitor the splitor char
- * \param ignoreEmpty whether ignoring the empty string element or not
- * \return the splited string vector
- */
-static std::vector<std::string> split(const std::string &str, char splitor,
-                                      bool ignoreEmpty = true) {
-  std::vector<std::string> vec;
-  auto iter = str.cbegin();
-  while (true) {
-    auto pos = std::find(iter, str.cend(), splitor);
-    auto elem = std::string(iter, pos);
-    if ((!ignoreEmpty) || (ignoreEmpty && !elem.empty())) vec.push_back(elem);
-    if (pos == str.cend()) break;
-    iter = ++pos;
-  }
-  return vec;
-}
+    /**
+     * \brief a function to split a string to some string elements according the
+     * splitor \param str the string to be splited \param splitor the splitor char
+     * \param ignoreEmpty whether ignoring the empty string element or not
+     * \return the splited string vector
+     */
+    static std::vector<std::string> split(const std::string &str, char splitor,
+                                          bool ignoreEmpty = true) {
+      std::vector<std::string> vec;
+      auto iter = str.cbegin();
+      while (true) {
+        auto pos = std::find(iter, str.cend(), splitor);
+        auto elem = std::string(iter, pos);
+        if ((!ignoreEmpty) || (ignoreEmpty && !elem.empty()))
+          vec.push_back(elem);
+        if (pos == str.cend())
+          break;
+        iter = ++pos;
+      }
+      return vec;
+    }
 
-static std::stringstream strStream;
+    static std::stringstream strStream;
 
-template <std::size_t Size>
-void __print__(std::ofstream &ofs, char splitor,
-               const std::array<std::string, Size> &header) {
-  for (int i = 0; i != Size - 1; ++i) ofs << header.at(i) << splitor;
-  ofs << header.at(Size - 1) << '\n';
-}
+    template <std::size_t Size>
+    void __print__(std::ofstream &ofs, char splitor,
+                   const std::array<std::string, Size> &header) {
+      for (int i = 0; i != Size - 1; ++i)
+        ofs << header.at(i) << splitor;
+      ofs << header.at(Size - 1) << '\n';
+    }
 
-template <typename ArgvType>
-void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv) {
-  ofs << argv << '\n';
-  return;
-}
+    template <typename ArgvType>
+    void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv) {
+      ofs << argv << '\n';
+      return;
+    }
 
-template <typename ArgvType, typename... ArgvsType>
-void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv,
-               const ArgvsType &...argvs) {
-  ofs << argv << splitor;
-  return __print__(ofs, splitor, argvs...);
-}
+    template <typename ArgvType, typename... ArgvsType>
+    void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv,
+                   const ArgvsType &...argvs) {
+      ofs << argv << splitor;
+      return __print__(ofs, splitor, argvs...);
+    }
 
-}  // namespace ns_priv
+  } // namespace ns_priv
 
 #pragma region csv reader and write
-class CSVReader {
- private:
-  std::ifstream *_ifs;
-  bool _isNewIFS;
-  bool _hasContext;
-  std::string _curStr;
+  class CSVReader {
+  private:
+    std::ifstream *_ifs;
+    bool _isNewIFS;
+    bool _hasContext;
+    std::string _curStr;
 
- public:
-  CSVReader() = delete;
+  public:
+    CSVReader() = delete;
 
-  CSVReader(const std::string &fileName)
-      : _ifs(new std::ifstream(fileName)),
-        _isNewIFS(true),
-        _hasContext(false) {}
+    CSVReader(const std::string &fileName)
+        : _ifs(new std::ifstream(fileName)),
+          _isNewIFS(true),
+          _hasContext(false) {}
 
-  CSVReader(std::ifstream &ifs)
-      : _ifs(&ifs), _isNewIFS(false), _hasContext(false) {}
+    CSVReader(std::ifstream &ifs)
+        : _ifs(&ifs), _isNewIFS(false), _hasContext(false) {}
 
-  CSVReader(const CSVReader &) = delete;
+    CSVReader(const CSVReader &) = delete;
 
-  ~CSVReader() {
-    if (this->_isNewIFS) {
-      this->_ifs->close();
-      delete this->_ifs;
+    ~CSVReader() {
+      if (this->_isNewIFS) {
+        this->_ifs->close();
+        delete this->_ifs;
+      }
     }
-  }
-  /**
-   * @brief judge whether there is another item next
-   */
-  bool hasNext() {
-    auto b = static_cast<bool>(std::getline(*(this->_ifs), this->_curStr));
-    _hasContext = true;
-    return b;
-  }
-
-  /**
-   * @brief get next std::string vector
-   */
-  std::vector<std::string> next(char splitor = ',') {
-    if (!_hasContext) std::getline(*(this->_ifs), this->_curStr);
-    return ns_priv::split(this->_curStr, splitor);
-  }
-};
-
-class CSVWriter {
- private:
-  std::ofstream *_ofs;
-  bool _isNewOFS;
-
- public:
-  CSVWriter() = delete;
-
-  CSVWriter(const std::string &fileName) {
-    this->_ofs = new std::ofstream(fileName);
-    this->_isNewOFS = true;
-  }
-
-  CSVWriter(std::ofstream &ofs) : _ofs(&ofs) { this->_isNewOFS = false; }
-
-  CSVWriter(const CSVWriter &) = delete;
-
-  ~CSVWriter() {
-    if (this->_isNewOFS) {
-      this->_ofs->close();
-      delete this->_ofs;
+    /**
+     * @brief judge whether there is another item next
+     */
+    bool hasNext() {
+      auto b = static_cast<bool>(std::getline(*(this->_ifs), this->_curStr));
+      _hasContext = true;
+      return b;
     }
-  }
 
-  /**
-   * @brief use variable template parameters to write any num arguements
-   */
-  template <typename... Types>
-  void writeItems(char splitor, const Types &...argvs) {
-    ns_priv::__print__(*(this->_ofs), splitor, argvs...);
-    return;
-  }
-};
+    /**
+     * @brief get next std::string vector
+     */
+    std::vector<std::string> next(char splitor = ',') {
+      if (!_hasContext)
+        std::getline(*(this->_ifs), this->_curStr);
+      return ns_priv::split(this->_curStr, splitor);
+    }
+  };
+
+  class CSVWriter {
+  private:
+    std::ofstream *_ofs;
+    bool _isNewOFS;
+
+  public:
+    CSVWriter() = delete;
+
+    CSVWriter(const std::string &fileName) {
+      this->_ofs = new std::ofstream(fileName);
+      this->_isNewOFS = true;
+    }
+
+    CSVWriter(std::ofstream &ofs) : _ofs(&ofs) { this->_isNewOFS = false; }
+
+    CSVWriter(const CSVWriter &) = delete;
+
+    ~CSVWriter() {
+      if (this->_isNewOFS) {
+        this->_ofs->close();
+        delete this->_ofs;
+      }
+    }
+
+    /**
+     * @brief use variable template parameters to write any num arguements
+     */
+    template <typename... Types>
+    void writeItems(char splitor, const Types &...argvs) {
+      ns_priv::__print__(*(this->_ofs), splitor, argvs...);
+      return;
+    }
+  };
 #pragma endregion
 
 #pragma region help macroes
@@ -408,7 +417,8 @@ class CSVWriter {
 #define STR_TRANS(strStream, str, val) \
   strStream << str;                    \
   strStream >> val;                    \
-  strStream.clear();
+  strStream.clear();                   \
+  strStream.str("")
 
 #define LAMBDA_TRANS(srcStr, dstType)                                   \
   [](std::stringstream &strStream, const std::string &str) -> dstType { \
@@ -453,4 +463,4 @@ class CSVWriter {
 
 #pragma endregion
 
-}  // namespace ns_csv
+} // namespace ns_csv
