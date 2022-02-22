@@ -285,6 +285,9 @@ namespace ns_csv {
       return vec;
     }
 
+    /**
+     * @brief used to cast types
+     */
     static std::stringstream strStream;
 
     template <std::size_t Size>
@@ -324,10 +327,15 @@ namespace ns_csv {
     CSVReader(const std::string &fileName)
         : _ifs(new std::ifstream(fileName)),
           _isNewIFS(true),
-          _hasContext(false) {}
+          _hasContext(false) {
+      /**
+       * @brief this constructor needs to delete the ifs
+       */
+    }
 
     CSVReader(std::ifstream &ifs)
-        : _ifs(&ifs), _isNewIFS(false), _hasContext(false) {}
+        : _ifs(&ifs), _isNewIFS(false), _hasContext(false) {
+    }
 
     CSVReader(const CSVReader &) = delete;
 
@@ -394,8 +402,8 @@ namespace ns_csv {
 #pragma region help macroes
 
 #define MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, N, \
-                                  ...)                                       \
-  N
+                                  ...) N
+
 #define COUNT_MACRO_VAR_ARGS(...) \
   MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
@@ -405,8 +413,14 @@ namespace ns_csv {
 
 #define ARRAY(...) std::array<std::string, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)>
 
+/**
+ * @brief the method to get element's data when writing data to csv file
+ */
 #define CSV_ELEM(method) elem.method
 
+/**
+ * @brief organize the cvs file headers
+ */
 #define CSV_HEADER(...) \
   ARRAY(__VA_ARGS__) { __VA_ARGS__ }
 
@@ -414,6 +428,9 @@ namespace ns_csv {
 
 #pragma region read macroes
 
+/**
+ * @brief use to cast string type to others
+ */
 #define STR_TRANS(strStream, str, val) \
   strStream << str;                    \
   strStream >> val;                    \
