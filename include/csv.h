@@ -305,6 +305,16 @@ namespace ns_csv {
       return;
     }
 
+    /**
+     * @brief print the argvs with template param list
+     * 
+     * @tparam ArgvType 
+     * @tparam ArgvsType 
+     * @param ofs the output file stream
+     * @param splitor the splitor
+     * @param argv one of the argvs
+     * @param argvs the else argvs
+     */
     template <typename ArgvType, typename... ArgvsType>
     void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv,
                    const ArgvsType &...argvs) {
