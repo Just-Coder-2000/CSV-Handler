@@ -17,7 +17,15 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief overload the operator '<<' for type 'std::stringstream' to avoid escape the space for string
+ *
+ * @param os the std::stringstream
+ * @param str the string
+ * @return std::stringstream&
+ */
 static std::stringstream &operator>>(std::stringstream &os, std::string &str) {
+  // don't use str << os, this will escape the space
   str = os.str();
   return os;
 }
@@ -32,8 +40,7 @@ namespace ns_csv {
  * @param splitor the splitor
  * @param itemType the type of the item in the csv file
  * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member
- * variables.
+ *             it's order is same as the declaration sequence of member variables.
  *
  * @return std::vector<itemType> data
  */
@@ -55,11 +62,9 @@ namespace ns_csv {
  * @param splitor the splitor
  * @param itemType the type of the item in the csv file
  * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member
- * variables.
+ *             it's order is same as the declaration sequence of member variables.
  *
- * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>)
- * {header, data}
+ * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
  */
 #define CSV_READ_IFS_ALL_H(ifs, splitor, itemType, ...)                   \
   [](std::ifstream &ifs,                                                  \
@@ -83,8 +88,7 @@ namespace ns_csv {
  * @param itemNum the number of the items to read
  * @param itemType the type of the item in the csv file
  * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member
- * variables.
+ *             it's order is same as the declaration sequence of member variables.
  *
  * @return std::vector<itemType> data
  */
@@ -111,11 +115,9 @@ namespace ns_csv {
  * @param itemNum the number of the items to read
  * @param itemType the type of the item in the csv file
  * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member
- * variables.
+ *             it's order is same as the declaration sequence of member variables.
  *
- * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>)
- * {header, data}
+ * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
  */
 #define CSV_READ_IFS_CER_H(ifs, splitor, itemNum, itemType, ...)             \
   [](std::ifstream &ifs,                                                     \
@@ -138,8 +140,7 @@ namespace ns_csv {
  * @param splitor the splitor
  * @param itemType the type of the item in the csv file
  * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member
- * variables.
+ *             it's order is same as the declaration sequence of member variables.
  *
  * @return std::vector<itemType> data
  */
@@ -156,11 +157,9 @@ namespace ns_csv {
  * @param splitor the splitor
  * @param itemType the type of the item in the csv file
  * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member
- * variables.
+ *             it's order is same as the declaration sequence of member variables.
  *
- * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>)
- * {header, data}
+ * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
  */
 #define CSV_READ_FILE_H(fileName, splitor, itemType, ...)                 \
   [](const std::string &name,                                             \
@@ -264,9 +263,11 @@ namespace ns_csv {
   namespace ns_priv {
 
     /**
-     * \brief a function to split a string to some string elements according the
-     * splitor \param str the string to be splited \param splitor the splitor char
+     * \brief a function to split a string to some string elements according the splitor
+     * 
+     * \param str the string to be splited \param splitor the splitor char
      * \param ignoreEmpty whether ignoring the empty string element or not
+     * 
      * \return the splited string vector
      */
     static std::vector<std::string> split(const std::string &str, char splitor,
@@ -289,7 +290,7 @@ namespace ns_csv {
      * @brief used to cast types
      */
     static std::stringstream strStream;
-
+    
     template <std::size_t Size>
     void __print__(std::ofstream &ofs, char splitor,
                    const std::array<std::string, Size> &header) {
@@ -316,7 +317,14 @@ namespace ns_csv {
 #pragma region csv reader and write
   class CSVReader {
   private:
+    /**
+     * @brief the input file stream
+     */
     std::ifstream *_ifs;
+    /**
+     * @brief judge the file stream is created by 'new' operation, if it is,
+     *        then delete it in the deconstructor
+     */
     bool _isNewIFS;
     bool _hasContext;
     std::string _curStr;
@@ -366,6 +374,9 @@ namespace ns_csv {
 
   class CSVWriter {
   private:
+    /**
+     * @brief the output file stream
+     */
     std::ofstream *_ofs;
     bool _isNewOFS;
 
@@ -437,6 +448,9 @@ namespace ns_csv {
   strStream.clear();                   \
   strStream.str("")
 
+/**
+ * @brief generate the lambda function to trans the string to the type 'dtsType'
+ */
 #define LAMBDA_TRANS(srcStr, dstType)                                   \
   [](std::stringstream &strStream, const std::string &str) -> dstType { \
     dstType val;                                                        \
@@ -444,6 +458,9 @@ namespace ns_csv {
     return val;                                                         \
   }(ns_csv::ns_priv::strStream, srcStr)
 
+/**
+ * @brief generate the param list with lambda
+ */
 #define LAMBDA_PACK(strVec, ...)                                 \
   MACRO_COMBINE(LAMBDA_PACK_, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)) \
   (strVec, __VA_ARGS__)
