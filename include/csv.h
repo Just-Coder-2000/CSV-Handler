@@ -264,10 +264,10 @@ namespace ns_csv {
 
     /**
      * \brief a function to split a string to some string elements according the splitor
-     * 
+     *
      * \param str the string to be splited \param splitor the splitor char
      * \param ignoreEmpty whether ignoring the empty string element or not
-     * 
+     *
      * \return the splited string vector
      */
     static std::vector<std::string> split(const std::string &str, char splitor,
@@ -290,7 +290,7 @@ namespace ns_csv {
      * @brief used to cast types
      */
     static std::stringstream strStream;
-    
+
     template <std::size_t Size>
     void __print__(std::ofstream &ofs, char splitor,
                    const std::array<std::string, Size> &header) {
@@ -307,9 +307,9 @@ namespace ns_csv {
 
     /**
      * @brief print the argvs with template param list
-     * 
-     * @tparam ArgvType 
-     * @tparam ArgvsType 
+     *
+     * @tparam ArgvType
+     * @tparam ArgvsType
      * @param ofs the output file stream
      * @param splitor the splitor
      * @param argv one of the argvs
@@ -336,26 +336,19 @@ namespace ns_csv {
      *        then delete it in the deconstructor
      */
     bool _isNewIFS;
-    bool _hasContext;
-    std::string _curStr;
 
   public:
-    CSVReader() = delete;
-
     CSVReader(const std::string &fileName)
         : _ifs(new std::ifstream(fileName)),
-          _isNewIFS(true),
-          _hasContext(false) {
+          _isNewIFS(true) {
       /**
        * @brief this constructor needs to delete the ifs
        */
     }
 
     CSVReader(std::ifstream &ifs)
-        : _ifs(&ifs), _isNewIFS(false), _hasContext(false) {
+        : _ifs(&ifs), _isNewIFS(false) {
     }
-
-    CSVReader(const CSVReader &) = delete;
 
     ~CSVReader() {
       if (this->_isNewIFS) {
@@ -363,23 +356,41 @@ namespace ns_csv {
         delete this->_ifs;
       }
     }
-    /**
-     * @brief judge whether there is another item next
-     */
-    bool hasNext() {
-      auto b = static_cast<bool>(std::getline(*(this->_ifs), this->_curStr));
-      _hasContext = true;
-      return b;
-    }
 
     /**
      * @brief get next std::string vector
      */
-    std::vector<std::string> next(char splitor = ',') {
-      if (!_hasContext)
-        std::getline(*(this->_ifs), this->_curStr);
-      return ns_priv::split(this->_curStr, splitor);
+    template <typename... ElemTypes>
+    bool readLine(char splitor = ',', ElemTypes &...elems) {
+      std::string str;
+      if (std::getline(*(this->_ifs), str)) {
+        auto strVec = ns_priv::split(str, splitor);
+        this->parse(strVec, 0, elems...);
+        return true;
+      }
+      return false;
     }
+
+  private:
+    template <typename ElemType, typename... ElemTypes>
+    void parse(const std::vector<std::string> &strVec, std::size_t index,
+               ElemType &elem, ElemTypes &...elems) {
+      std::stringstream stream;
+      stream << strVec.at(index);
+      stream >> elem;
+      return this->parse(strVec, index + 1, elems...);
+    }
+
+    void parse(const std::vector<std::string> &strVec, std::size_t index) {
+      return;
+    }
+
+  private:
+    CSVReader() = delete;
+    CSVReader(const CSVReader &) = delete;
+    CSVReader(CSVReader &&) = delete;
+    CSVReader &operator=(const CSVReader &) = delete;
+    CSVReader &operator=(CSVReader &&) = delete;
   };
 
   class CSVWriter {
@@ -391,16 +402,12 @@ namespace ns_csv {
     bool _isNewOFS;
 
   public:
-    CSVWriter() = delete;
-
     CSVWriter(const std::string &fileName) {
       this->_ofs = new std::ofstream(fileName);
       this->_isNewOFS = true;
     }
 
     CSVWriter(std::ofstream &ofs) : _ofs(&ofs) { this->_isNewOFS = false; }
-
-    CSVWriter(const CSVWriter &) = delete;
 
     ~CSVWriter() {
       if (this->_isNewOFS) {
@@ -417,6 +424,13 @@ namespace ns_csv {
       ns_priv::__print__(*(this->_ofs), splitor, argvs...);
       return;
     }
+
+  private:
+    CSVWriter() = delete;
+    CSVWriter(const CSVWriter &) = delete;
+    CSVWriter(CSVWriter &&) = delete;
+    CSVWriter &operator=(const CSVWriter &) = delete;
+    CSVWriter &operator=(CSVWriter &&) = delete;
   };
 #pragma endregion
 

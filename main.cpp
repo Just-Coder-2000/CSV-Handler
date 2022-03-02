@@ -14,7 +14,7 @@
 #pragma region helpers
 
 struct Info {
- private:
+private:
   /**
    * @brief the members
    */
@@ -22,7 +22,7 @@ struct Info {
   std::string _name;
   float _score;
 
- public:
+public:
   /**
    * @brief construct a new Info object
    */
@@ -49,10 +49,10 @@ std::ostream &operator<<(std::ostream &os, const Info &obj) {
   return os;
 }
 
-
 template <typename ElemType>
 void vecOutput(const std::vector<ElemType> &vec) {
-  for (const auto &elem : vec) std::cout << elem << '\n';
+  for (const auto &elem : vec)
+    std::cout << elem << '\n';
 }
 
 #pragma endregion
@@ -71,7 +71,7 @@ void test_CSV_READ_IFS_ALL_H() {
   auto data = CSV_READ_IFS_ALL_H(ifs, ',', ns_geo::RefPoint3f, uint, float,
                                  float, float);
   ns_log::info("header: ", data.first.at(0), ',', data.first.at(1), ',',
-       data.first.at(2), ',', data.first.at(3));
+               data.first.at(2), ',', data.first.at(3));
   vecOutput(data.second);
   ifs.close();
 }
@@ -90,7 +90,7 @@ void test_CSV_READ_IFS_CER_H() {
   auto data = CSV_READ_IFS_CER_H(ifs, ',', 4, ns_geo::RefPoint3f, uint, float,
                                  float, float);
   ns_log::info("header: ", data.first.at(0), ',', data.first.at(1), ',',
-       data.first.at(2), ',', data.first.at(3));
+               data.first.at(2), ',', data.first.at(3));
   vecOutput(data.second);
   ifs.close();
 }
@@ -107,7 +107,7 @@ void test_CSV_READ_FILE_H() {
   auto data = CSV_READ_FILE_H("../data/refpoint3f.csv", ',', ns_geo::RefPoint3f,
                               uint, float, float, float);
   ns_log::info("header: ", data.first.at(0), ',', data.first.at(1), ',',
-       data.first.at(2), ',', data.first.at(3));
+               data.first.at(2), ',', data.first.at(3));
   vecOutput(data.second);
 }
 
@@ -159,10 +159,11 @@ void test_CSVReader_IFS() {
   std::ifstream ifs("../data/info.csv");
   ns_csv::CSVReader readerIFS(ifs);
 
-  while (readerIFS.hasNext()) {
-    auto items = readerIFS.next();
-    Info obj(std::stoi(items.at(0)), items.at(1), std::stof(items.at(2)));
-    std::cout << obj << std::endl;
+  int id;
+  std::string name;
+  float score;
+  while (readerIFS.readLine(',', id, name, score)) {
+    std::cout << Info(id, name, score) << std::endl;
   }
   ifs.close();
 }
@@ -171,10 +172,11 @@ void test_CSVReader_FILE() {
   ns_log::info("test the ns_csv::CSVReader[FILE], file '../data/info.csv'");
 
   ns_csv::CSVReader reader("../data/info.csv");
-  while (reader.hasNext()) {
-    auto items = reader.next();
-    Info obj(std::stoi(items.at(0)), items.at(1), std::stof(items.at(2)));
-    std::cout << obj << std::endl;
+  int id;
+  std::string name;
+  float score;
+  while (reader.readLine(',', id, name, score)) {
+    std::cout << Info(id, name, score) << std::endl;
   }
 }
 
@@ -189,7 +191,8 @@ void test_CSVWriter_OFS() {
 
   writer.writeItems(',', "x+z", "x+y", "y-z", "z-y");
 
-  for (const auto &p : ps) writer.writeItems(',', p.x(), p.y(), p.z());
+  for (const auto &p : ps)
+    writer.writeItems(',', p.x(), p.y(), p.z());
 
   ofs.close();
 }
@@ -203,7 +206,8 @@ void test_CSVWriter_FILE() {
 
   writer.writeItems(',', "x+z", "x+y", "y-z", "z-y");
 
-  for (const auto &p : ps) writer.writeItems(',', p.x(), p.y(), p.z());
+  for (const auto &p : ps)
+    writer.writeItems(',', p.x(), p.y(), p.z());
 }
 
 int main(int argc, char const *argv[]) {

@@ -21,37 +21,35 @@ _|              _|    _|  _|    _|    _|  _|    _|  _|    _|  _|    _|  _|  _|  
 + ___CSVReader[IFS]___
 
 ```cpp
-void test_CSVReader_IFS()
-{
-    INFO("test the ns_csv::CSVReader[IFS], file '../data/info.csv'");
+void test_CSVReader_IFS() {
+  ns_log::info("test the ns_csv::CSVReader[IFS], file '../data/info.csv'");
 
-    std::ifstream ifs("../data/info.csv");
-    ns_csv::CSVReader readerIFS(ifs);
+  std::ifstream ifs("../data/info.csv");
+  ns_csv::CSVReader readerIFS(ifs);
 
-    while (readerIFS.hasNext())
-    {
-        auto items = readerIFS.next();
-        Info obj(std::stoi(items.at(0)), items.at(1), std::stof(items.at(2)));
-        std::cout << obj << std::endl;
-    }
-    ifs.close();
+  int id;
+  std::string name;
+  float score;
+  while (readerIFS.readLine(',', id, name, score)) {
+    std::cout << Info(id, name, score) << std::endl;
+  }
+  ifs.close();
 }
 ```
 
 + ___CSVReader[FILE]___
 
 ```cpp
-void test_CSVReader_FILE()
-{
-    INFO("test the ns_csv::CSVReader[FILE], file '../data/info.csv'");
+void test_CSVReader_FILE() {
+  ns_log::info("test the ns_csv::CSVReader[FILE], file '../data/info.csv'");
 
-    ns_csv::CSVReader reader("../data/info.csv");
-    while (reader.hasNext())
-    {
-        auto items = reader.next();
-        Info obj(std::stoi(items.at(0)), items.at(1), std::stof(items.at(2)));
-        std::cout << obj << std::endl;
-    }
+  ns_csv::CSVReader reader("../data/info.csv");
+  int id;
+  std::string name;
+  float score;
+  while (reader.readLine(',', id, name, score)) {
+    std::cout << Info(id, name, score) << std::endl;
+  }
 }
 ```
 
