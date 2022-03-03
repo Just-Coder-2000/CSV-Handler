@@ -157,12 +157,11 @@ void test_CSVReader_IFS() {
   ns_log::info("test the ns_csv::CSVReader[IFS], file '../data/info.csv'");
 
   std::ifstream ifs("../data/info.csv");
-  ns_csv::CSVReader readerIFS(ifs);
-
+  ns_csv::CSVReader::Ptr readerIFS = ns_csv::CSVReader::create(ifs);
   int id;
   std::string name;
   float score;
-  while (readerIFS.readLine(',', id, name, score)) {
+  while (readerIFS->readLine(',', id, name, score)) {
     std::cout << Info(id, name, score) << std::endl;
   }
   ifs.close();
@@ -171,11 +170,11 @@ void test_CSVReader_IFS() {
 void test_CSVReader_FILE() {
   ns_log::info("test the ns_csv::CSVReader[FILE], file '../data/info.csv'");
 
-  ns_csv::CSVReader reader("../data/info.csv");
+  ns_csv::CSVReader::Ptr reader = ns_csv::CSVReader::create("../data/info.csv");
   int id;
   std::string name;
   float score;
-  while (reader.readLine(',', id, name, score)) {
+  while (reader->readLine(',', id, name, score)) {
     std::cout << Info(id, name, score) << std::endl;
   }
 }
@@ -185,15 +184,11 @@ void test_CSVWriter_OFS() {
 
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);
-
   std::ofstream ofs("../data/point3f.csv");
-  ns_csv::CSVWriter writer(ofs);
-
-  writer.writeItems(',', "x+z", "x+y", "y-z", "z-y");
-
+  ns_csv::CSVWriter::Ptr writer = ns_csv::CSVWriter::create(ofs);
+  writer->writeLine(',', "x+z", "x+y", "y-z", "z-y");
   for (const auto &p : ps)
-    writer.writeItems(',', p.x(), p.y(), p.z());
-
+    writer->writeLine(',', p.x(), p.y(), p.z());
   ofs.close();
 }
 
@@ -202,12 +197,10 @@ void test_CSVWriter_FILE() {
 
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);
-  ns_csv::CSVWriter writer("../data/point3f.csv");
-
-  writer.writeItems(',', "x+z", "x+y", "y-z", "z-y");
-
+  ns_csv::CSVWriter::Ptr writer = ns_csv::CSVWriter::create("../data/point3f.csv");
+  writer->writeLine(',', "x+z", "x+y", "y-z", "z-y");
   for (const auto &p : ps)
-    writer.writeItems(',', p.x(), p.y(), p.z());
+    writer->writeLine(',', p.x(), p.y(), p.z());
 }
 
 int main(int argc, char const *argv[]) {

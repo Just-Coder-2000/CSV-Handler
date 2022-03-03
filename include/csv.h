@@ -13,24 +13,29 @@
 #include <array>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
-/**
- * @brief overload the operator '<<' for type 'std::stringstream' to avoid escape the space for string
- *
- * @param os the std::stringstream
- * @param str the string
- * @return std::stringstream&
- */
-static std::stringstream &operator>>(std::stringstream &os, std::string &str) {
-  // don't use str << os, this will escape the space
-  str = os.str();
-  return os;
-}
-
 namespace ns_csv {
+
+  /**
+   * @brief overload the operator '<<' for type 'std::stringstream' to avoid escape the space for string
+   *
+   * @param os the std::stringstream
+   * @param str the string
+   * @return std::stringstream&
+   */
+  static std::stringstream &operator>>(std::stringstream &os, std::string &str) {
+    // don't use str << os, this will escape the space
+    str = os.str();
+    return os;
+  }
+
+#define THROW_EXCEPTION(where, msg) \
+  throw std::runtime_error(std::string("[ error from 'libcsv'-'") + #where + "' ] " + msg)
+
 #pragma region csv read
 
 /**
@@ -260,6 +265,7 @@ namespace ns_csv {
 
 #pragma endregion
 
+#pragma region help functions
   namespace ns_priv {
 
     /**
@@ -323,115 +329,195 @@ namespace ns_csv {
     }
 
   } // namespace ns_priv
+#pragma endregion
 
 #pragma region csv reader and write
-  class CSVReader {
-  private:
-    /**
-     * @brief the input file stream
-     */
-    std::ifstream *_ifs;
-    /**
-     * @brief judge the file stream is created by 'new' operation, if it is,
-     *        then delete it in the deconstructor
-     */
-    bool _isNewIFS;
 
-  public:
-    CSVReader(const std::string &fileName)
-        : _ifs(new std::ifstream(fileName)),
-          _isNewIFS(true) {
+  namespace ns_priv {
+    class Reader {
+    public:
+      Reader(std::ifstream *ifs) : _ifs(ifs) {}
+
+      virtual ~Reader() {}
+
       /**
-       * @brief this constructor needs to delete the ifs
+       * @brief get next std::string vector
        */
-    }
+      template <typename... ElemTypes>
+      bool readLine(char splitor = ',', ElemTypes &...elems) {
+        std::string str;
+        if (std::getline(*(this->_ifs), str)) {
+          auto strVec = ns_priv::split(str, splitor);
+          this->parse(strVec, 0, elems...);
+          return true;
+        }
+        return false;
+      }
 
-    CSVReader(std::ifstream &ifs)
-        : _ifs(&ifs), _isNewIFS(false) {
-    }
+    protected:
+      template <typename ElemType, typename... ElemTypes>
+      void parse(const std::vector<std::string> &strVec, std::size_t index,
+                 ElemType &elem, ElemTypes &...elems) {
+        std::stringstream stream;
+        stream << strVec.at(index);
+        stream >> elem;
+        return this->parse(strVec, index + 1, elems...);
+      }
 
-    ~CSVReader() {
-      if (this->_isNewIFS) {
-        this->_ifs->close();
+      void parse(const std::vector<std::string> &strVec, std::size_t index) {
+        return;
+      }
+
+    protected:
+      /**
+       * @brief the input file stream
+       */
+      std::ifstream *_ifs;
+
+    private:
+      Reader() = delete;
+      Reader(const Reader &) = delete;
+      Reader(Reader &&) = delete;
+      Reader &operator=(const Reader &) = delete;
+      Reader &operator=(Reader &&) = delete;
+    };
+
+    class StreamReader : public Reader {
+
+    public:
+      StreamReader(std::ifstream &ifs) : Reader(&ifs) {
+        if (!this->_ifs->is_open()) {
+          THROW_EXCEPTION(CSVReader, "the file stream may be invalid");
+        }
+      }
+
+      virtual ~StreamReader() {}
+    };
+
+    class FileReader : public Reader {
+
+    public:
+      FileReader(const std::string &filename) : Reader(new std::ifstream(filename)) {
+        if (!this->_ifs->is_open()) {
+          THROW_EXCEPTION(CSVReader, "the file name may be invalid");
+        }
+      }
+
+      virtual ~FileReader() {
         delete this->_ifs;
       }
-    }
+    };
 
-    /**
-     * @brief get next std::string vector
-     */
-    template <typename... ElemTypes>
-    bool readLine(char splitor = ',', ElemTypes &...elems) {
-      std::string str;
-      if (std::getline(*(this->_ifs), str)) {
-        auto strVec = ns_priv::split(str, splitor);
-        this->parse(strVec, 0, elems...);
-        return true;
-      }
-      return false;
-    }
+  } // namespace ns_priv
 
-  private:
-    template <typename ElemType, typename... ElemTypes>
-    void parse(const std::vector<std::string> &strVec, std::size_t index,
-               ElemType &elem, ElemTypes &...elems) {
-      std::stringstream stream;
-      stream << strVec.at(index);
-      stream >> elem;
-      return this->parse(strVec, index + 1, elems...);
-    }
-
-    void parse(const std::vector<std::string> &strVec, std::size_t index) {
-      return;
-    }
-
-  private:
-    CSVReader() = delete;
-    CSVReader(const CSVReader &) = delete;
-    CSVReader(CSVReader &&) = delete;
-    CSVReader &operator=(const CSVReader &) = delete;
-    CSVReader &operator=(CSVReader &&) = delete;
-  };
-
-  class CSVWriter {
-  private:
-    /**
-     * @brief the output file stream
-     */
-    std::ofstream *_ofs;
-    bool _isNewOFS;
+  class CSVReader {
+  public:
+    using Ptr = std::shared_ptr<ns_priv::Reader>;
 
   public:
-    CSVWriter(const std::string &fileName) {
-      this->_ofs = new std::ofstream(fileName);
-      this->_isNewOFS = true;
-    }
-
-    CSVWriter(std::ofstream &ofs) : _ofs(&ofs) { this->_isNewOFS = false; }
-
-    ~CSVWriter() {
-      if (this->_isNewOFS) {
-        this->_ofs->close();
-        delete this->_ofs;
-      }
+    /**
+     * @brief create a file reader pointer
+     *
+     * @param filename the name of the csv file
+     * @return Ptr
+     */
+    static Ptr create(const std::string &filename) {
+      return std::make_shared<ns_priv::FileReader>(filename);
     }
 
     /**
-     * @brief use variable template parameters to write any num arguements
+     * @brief create a input file stream reader pointer
+     *
+     * @param ifs input file stream
+     * @return Ptr
      */
-    template <typename... Types>
-    void writeItems(char splitor, const Types &...argvs) {
-      ns_priv::__print__(*(this->_ofs), splitor, argvs...);
-      return;
+    static Ptr create(std::ifstream &ifs) {
+      return std::make_shared<ns_priv::StreamReader>(ifs);
+    }
+  };
+
+  namespace ns_priv {
+    class Writer {
+    public:
+      Writer(std::ofstream *ofs) : _ofs(ofs) {}
+
+      virtual ~Writer() {}
+
+      /**
+       * @brief use variable template parameters to write any num arguements
+       */
+      template <typename... Types>
+      void writeLine(char splitor, const Types &...argvs) {
+        ns_priv::__print__(*(this->_ofs), splitor, argvs...);
+        return;
+      }
+
+    protected:
+      /**
+       * @brief the output file stream
+       */
+      std::ofstream *_ofs;
+
+    private:
+      Writer() = delete;
+      Writer(const Writer &) = delete;
+      Writer(Writer &&) = delete;
+      Writer &operator=(const Writer &) = delete;
+      Writer &operator=(Writer &&) = delete;
+    };
+
+    class StreamWriter : public Writer {
+    public:
+      StreamWriter(std::ofstream &ofs) : Writer(&ofs) {
+        if (!this->_ofs->is_open()) {
+          THROW_EXCEPTION(CSVWriter, "the file stream may be invalid");
+        }
+      }
+
+      virtual ~StreamWriter() {}
+    };
+
+    class FileWriter : public Writer {
+    public:
+      FileWriter(const std::string &filename) : Writer(new std::ofstream(filename)) {
+        if (!this->_ofs->is_open()) {
+          THROW_EXCEPTION(CSVWriter, "the file name may be invalid");
+        }
+      }
+
+      virtual ~FileWriter() {
+        delete this->_ofs;
+      }
+    };
+
+  } // namespace ns_priv
+
+  class CSVWriter {
+  public:
+    using Ptr = std::shared_ptr<ns_priv::Writer>;
+
+  public:
+    /**
+     * @brief create a file writer pointer
+     *
+     * @param filename the name of the csv file
+     * @return Ptr
+     */
+    static Ptr create(const std::string &filename) {
+      return std::make_shared<ns_priv::FileWriter>(filename);
     }
 
-  private:
-    CSVWriter() = delete;
-    CSVWriter(const CSVWriter &) = delete;
-    CSVWriter(CSVWriter &&) = delete;
-    CSVWriter &operator=(const CSVWriter &) = delete;
-    CSVWriter &operator=(CSVWriter &&) = delete;
+    /**
+     * @brief create a output file stream writer pointer
+     *
+     * @param ifs output file stream
+     * @return Ptr
+     */
+    static Ptr create(std::ofstream &ofs) {
+      return std::make_shared<ns_priv::StreamWriter>(ofs);
+    }
   };
+
 #pragma endregion
 
 #pragma region help macroes
