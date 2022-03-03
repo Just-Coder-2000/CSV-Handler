@@ -1,0 +1,39 @@
+@startuml CSV
+
+skinparam DefaultFontName "Ubuntu Mono"
+scale 20
+
+abstract Reader{
+    # std::ifstream *ifs
+    + readLine()
+}
+class FileReader
+class StreamReader
+class CSVReader{
+    + create(filename)
+    + create(ifstream)
+}
+
+FileReader --|> Reader
+StreamReader --|> Reader
+
+CSVReader .. FileReader : create >
+CSVReader .. StreamReader : create >
+
+abstract Writer{
+    # std::ofstream *ofs
+    + writeLine()
+}
+class FileWriter
+class StreamWriter
+class CSVWriter{
+    + create(filename)
+    + create(ofstream)
+}
+
+FileWriter --|> Writer
+StreamWriter --|> Writer
+
+CSVWriter .. FileWriter : create >
+CSVWriter .. StreamWriter : create >
+@enduml

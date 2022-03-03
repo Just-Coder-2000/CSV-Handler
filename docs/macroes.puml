@@ -1,0 +1,36 @@
+@startmindmap Macroes
+
+skinparam DefaultFontName "Ubuntu Mono"
+scale 20
+
+*[#Orange] Macroes
+
+**[#FFBBCC] Read
+***[#lightblue] Stream
+****[#DarkOliveGreen] With Header
+***** CSV_READ_IFS_ALL_H(ifs, splitor, itemType, ...)
+***** CSV_READ_IFS_CER_H(ifs, splitor, itemNum, itemType, ...)
+****[#AliceBlue] Without Header
+***** CSV_READ_IFS_ALL(ifs, splitor, itemType, ...)
+***** CSV_READ_IFS_CER(ifs, splitor, itemNum, itemType, ...)
+
+***[#lightgreen] File
+****[#DarkOliveGreen] With Header
+***** CSV_READ_FILE_H(fileName, splitor, itemType, ...)
+****[#AliceBlue] Without Header
+***** CSV_READ_FILE(fileName, splitor, itemType, ...)
+
+**[#FFBBCC] Write
+***[#lightblue] Stream
+****[#DarkOliveGreen] With Header
+***** CSV_WRITE_OFS_H(ofs, header, data, splitor, ...)
+****[#AliceBlue] Without Header
+***** CSV_WRITE_OFS(ofs, data, splitor, ...)
+
+***[#lightgreen] File
+****[#DarkOliveGreen] With Header
+***** CSV_WRITE_FILE_H(fileName, header, data, splitor, ...)
+****[#AliceBlue] Without Header
+***** CSV_WRITE_FILE(fileName, data, splitor, ...)
+
+@endmindmap
