@@ -1,10 +1,12 @@
-# CSV Handler [MACRO LIB]
+# CSV Handler
 
 >___Author : csl___    
 
 >___E-Mail : 3079625093@qq.com___
 
-## OverView
+[TOC]
+
+## 1. OverView
 This is a library implemented with cpp macros to read and write CSV files. It is simple and universal.
 ```txt
                                                                             
@@ -16,13 +18,19 @@ _|              _|    _|  _|    _|    _|  _|    _|  _|    _|  _|    _|  _|  _|  
                                                                             
 ```
 
-## Structure
+## 2. Structure
 
-<img src="./docs/CSV.png">
+<img src="./docs/imgs/CSV.png" width="70%">
 
-<img src="./docs/macroes.png">
+<img src="./docs/imgs/macroes.png">
 
-## Macroes 
+## 3. Methods 
+
+### 1. Read CSV
+
+#### 1). class object
+
+<img src="./docs/imgs/readLine.png">
 
 + ___CSVReader[IFS]___
 
@@ -57,6 +65,8 @@ void test_CSVReader_FILE() {
   }
 }
 ```
+
+#### 2). macroes
 
 + ___CSV_READ_FILE(fileName, splitor, itemType, ...)___
 
@@ -185,6 +195,12 @@ void test_CSV_READ_IFS_CER_H()
 }
 ```
 
+### 2. Write CSV
+
+#### 1). class object
+
+<img src="./docs/imgs/writeLine.png">
+
 + ___CSVWriter[OFS]___
 
 ```cpp
@@ -216,6 +232,8 @@ void test_CSVWriter_FILE() {
     writer->writeLine(',', p.x(), p.y(), p.z());
 }
 ```
+
+#### 2). macroes
 
 + ___CSV_HEADER(...)___
 
@@ -329,7 +347,7 @@ void test_CSV_WRITE_FILE_H()
 }
 ```
 
-## Files
+## 4. Files
 
 [info.csv](./data/info.csv)   
 
