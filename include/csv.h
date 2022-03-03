@@ -341,7 +341,7 @@ namespace ns_csv {
       virtual ~Reader() {}
 
       /**
-       * @brief get next std::string vector
+       * @brief get next std::string vector and assign to the elems
        */
       template <typename... ElemTypes>
       bool readLine(char splitor = ',', ElemTypes &...elems) {
