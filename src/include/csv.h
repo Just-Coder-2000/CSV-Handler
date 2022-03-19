@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <array>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -449,6 +450,11 @@ namespace ns_csv {
       template <typename... Types>
       void writeLine(char splitor, const Types &...argvs) {
         ns_priv::__print__(*(this->_ofs), splitor, argvs...);
+        return;
+      }
+
+      void setPrecision(std::size_t prec) {
+        *(this->_ofs) << std::fixed << std::setprecision(prec);
         return;
       }
 
