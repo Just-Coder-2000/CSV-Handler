@@ -392,7 +392,7 @@ namespace ns_csv {
         }
       }
 
-      virtual ~StreamReader() {}
+      virtual ~StreamReader() override {}
     };
 
     class FileReader : public Reader {
