@@ -404,7 +404,7 @@ namespace ns_csv {
         }
       }
 
-      virtual ~FileReader() {
+      virtual ~FileReader() override {
         delete this->_ifs;
       }
     };
@@ -480,7 +480,7 @@ namespace ns_csv {
         }
       }
 
-      virtual ~StreamWriter() {}
+      virtual ~StreamWriter() override {}
     };
 
     class FileWriter : public Writer {
@@ -491,7 +491,7 @@ namespace ns_csv {
         }
       }
 
-      virtual ~FileWriter() {
+      virtual ~FileWriter() override {
         delete this->_ofs;
       }
     };
