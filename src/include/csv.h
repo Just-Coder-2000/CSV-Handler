@@ -613,4 +613,5 @@ namespace ns_csv {
 
 #pragma endregion
 
+#undef THROW_EXCEPTION
 } // namespace ns_csv
