@@ -130,7 +130,6 @@ void test_CSV_WRITE_OFS_H() {
   CSV_WRITE_OFS_H(ofs, CSV_HEADER("x+z", "x+y", "y-z", "z-y"), ps, ',',
                   CSV_ELEM(x()) * CSV_ELEM(z()), CSV_ELEM(x()) + CSV_ELEM(y()),
                   CSV_ELEM(y()) - CSV_ELEM(z()), CSV_ELEM(z()) * CSV_ELEM(y()));
-  auto header = CSV_HEADER("x+z", "x+y", "y-z", "z-y");
   ofs.close();
 }
 
@@ -138,9 +137,9 @@ void test_CSV_WRITE_FILE() {
   ns_log::info("test the macro 'CSV_WRITE_FILE', file '../data/point3f.csv'");
   auto ps = ns_geo::PointSet3f::randomGenerator(10, 0.0f, 1.0f, 0.0f, 1.0f,
                                                 0.0f, 1.0f);
-  CSV_WRITE_FILE("../data/point3f.csv", ps, ',', CSV_ELEM(x()) * CSV_ELEM(z()),
-                 CSV_ELEM(x()) + CSV_ELEM(y()), CSV_ELEM(y()) - CSV_ELEM(z()),
-                 CSV_ELEM(z()) * CSV_ELEM(y()));
+  CSV_WRITE_FILE("../data/point3f.csv", ps, ',',
+                 CSV_ELEM(x()) * CSV_ELEM(z()), CSV_ELEM(x()) + CSV_ELEM(y()),
+                 CSV_ELEM(y()) - CSV_ELEM(z()), CSV_ELEM(z()) * CSV_ELEM(y()));
 }
 
 void test_CSV_WRITE_FILE_H() {
@@ -200,7 +199,7 @@ void test_CSVWriter_FILE() {
   ns_csv::CSVWriter::Ptr writer = ns_csv::CSVWriter::create("../data/point3f.csv");
   writer->writeLine(',', "x+z", "x+y", "y-z", "z-y");
   for (const auto &p : ps)
-    writer->writeLine(',', p.x(), p.y(), p.z());
+    writer->writeLine(',', p.x() + p.z(), p.x() + p.y(), p.y() - p.z(), p.z() - p.y());
 }
 
 int main(int argc, char const *argv[]) {
