@@ -1,10 +1,12 @@
 /**
  * @file main.cpp
- * @author csl (3079625093@qq.com)
- * @version 0.1
- * @date 2022-01-19
- *
+ * @author shlchen (3079625093@qq.com)
+ * @brief 
+ * @version 0.2
+ * @date 2022-05-28
+ * 
  * @copyright Copyright (c) 2022
+ * 
  */
 
 #include "artwork/logger/logger.h"
