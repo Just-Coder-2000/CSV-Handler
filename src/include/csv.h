@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -360,8 +361,14 @@ namespace ns_csv {
       void parse(const std::vector<std::string> &strVec, std::size_t index,
                  ElemType &elem, ElemTypes &...elems) {
         std::stringstream stream;
-        stream << strVec.at(index);
-        stream >> elem;
+        if (!strVec.at(index).empty()) {
+          stream << strVec.at(index);
+          stream >> elem;
+        } else {
+          // empty
+          ElemType val{};
+          memcpy((void *)(&elem), (void *)(&val), sizeof(elem));
+        }
         return this->parse(strVec, index + 1, elems...);
       }
 
