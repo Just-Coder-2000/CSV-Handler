@@ -1,0 +1,85 @@
+[info]-[1653715734.534165(S)] 'test_READ_IFS_ALL'-'../data/info.csv'
+{'id': 201901, 'name': Tom, 'score': 81.1}
+{'id': 201902, 'name': Jhon, 'score': 0}
+{'id': 201903, 'name': Jerry, 'score': 95.3}
+{'id': 201904, 'name': , 'score': 95.6}
+{'id': 201905, 'name': Mary, 'score': 81.1}
+{'id': 201906, 'name': Lily, 'score': 95.6}
+{'id': 201907, 'name': Lina, 'score': 95.3}
+{'id': 201908, 'name': Jack, 'score': 81.1}
+{'id': 201909, 'name': Bob, 'score': 81.1}
+{'id': 201910, 'name': Stack, 'score': 95.3}
+[info]-[1653715734.534498(S)] 'test_READ_IFS_ALL_H'-'../data/refpoint3f_h.csv'
+[info]-[1653715734.534729(S)] header: id,x,y,z
+{'id': 9, 'x': 0.0605643, 'y': 0.897656, 'z': 0.166507}
+{'id': 8, 'x': 0.274907, 'y': 0.477732, 'z': 0.436411}
+{'id': 7, 'x': 0.884707, 'y': 0.0726859, 'z': 0.753356}
+{'id': 6, 'x': 0.98255, 'y': 0.365339, 'z': 0.75641}
+{'id': 5, 'x': 0.328234, 'y': 0.0474645, 'z': 0.762198}
+{'id': 4, 'x': 0.701191, 'y': 0.653919, 'z': 0.526929}
+{'id': 3, 'x': 0.930436, 'y': 0.686773, 'z': 0.0668422}
+{'id': 2, 'x': 0.00769819, 'y': 0.5297, 'z': 0.0345721}
+{'id': 1, 'x': 0.519416, 'y': 0.934693, 'z': 0.678865}
+{'id': 0, 'x': 0.218959, 'y': 0.45865, 'z': 0.131538}
+[info]-[1653715734.534871(S)] 'test_READ_IFS_CER'-'../data/info.csv'
+{'id': 201901, 'name': Tom, 'score': 81.1}
+{'id': 201902, 'name': Jhon, 'score': 0}
+{'id': 201903, 'name': Jerry, 'score': 95.3}
+{'id': 201904, 'name': , 'score': 95.6}
+[info]-[1653715734.534987(S)] 'test_READ_IFS_CER_H'-'../data/refpoint3f_h.csv'
+[info]-[1653715734.535081(S)] header: id,x,y,z
+{'id': 9, 'x': 0.0605643, 'y': 0.897656, 'z': 0.166507}
+{'id': 8, 'x': 0.274907, 'y': 0.477732, 'z': 0.436411}
+{'id': 7, 'x': 0.884707, 'y': 0.0726859, 'z': 0.753356}
+{'id': 6, 'x': 0.98255, 'y': 0.365339, 'z': 0.75641}
+[info]-[1653715734.535154(S)] 'test_READ_FILE_ALL'-'../data/info.csv'
+{'id': 201901, 'name': Tom, 'score': 81.1}
+{'id': 201902, 'name': Jhon, 'score': 0}
+{'id': 201903, 'name': Jerry, 'score': 95.3}
+{'id': 201904, 'name': , 'score': 95.6}
+{'id': 201905, 'name': Mary, 'score': 81.1}
+{'id': 201906, 'name': Lily, 'score': 95.6}
+{'id': 201907, 'name': Lina, 'score': 95.3}
+{'id': 201908, 'name': Jack, 'score': 81.1}
+{'id': 201909, 'name': Bob, 'score': 81.1}
+{'id': 201910, 'name': Stack, 'score': 95.3}
+[info]-[1653715734.535381(S)] 'test_READ_FILE_ALL_H'-'../data/refpoint3f_h.csv'
+[info]-[1653715734.535554(S)] header: id,x,y,z
+{'id': 9, 'x': 0.0605643, 'y': 0.897656, 'z': 0.166507}
+{'id': 8, 'x': 0.274907, 'y': 0.477732, 'z': 0.436411}
+{'id': 7, 'x': 0.884707, 'y': 0.0726859, 'z': 0.753356}
+{'id': 6, 'x': 0.98255, 'y': 0.365339, 'z': 0.75641}
+{'id': 5, 'x': 0.328234, 'y': 0.0474645, 'z': 0.762198}
+{'id': 4, 'x': 0.701191, 'y': 0.653919, 'z': 0.526929}
+{'id': 3, 'x': 0.930436, 'y': 0.686773, 'z': 0.0668422}
+{'id': 2, 'x': 0.00769819, 'y': 0.5297, 'z': 0.0345721}
+{'id': 1, 'x': 0.519416, 'y': 0.934693, 'z': 0.678865}
+{'id': 0, 'x': 0.218959, 'y': 0.45865, 'z': 0.131538}
+[info]-[1653715734.535689(S)] 'test_CSV_WRITE_OFS'-'../data/refpoint3f.csv'
+[info]-[1653715734.536184(S)] 'test_CSV_WRITE_OFS_H'-'../data/refpoint3f_h.csv'
+[info]-[1653715734.536681(S)] 'test_CSV_WRITE_FILE'-'../data/refpoint3f.csv'
+[info]-[1653715734.539478(S)] 'test_CSV_WRITE_FILE_H'-'../data/refpoint3f_h.csv'
+[info]-[1653715734.539637(S)] 'test_CSVReader_IFS'''../data/info.csv'
+{'id': 201901, 'name': Tom, 'score': 81.1}
+{'id': 201902, 'name': Jhon, 'score': 0}
+{'id': 201903, 'name': Jerry, 'score': 95.3}
+{'id': 201904, 'name': , 'score': 95.6}
+{'id': 201905, 'name': Mary, 'score': 81.1}
+{'id': 201906, 'name': Lily, 'score': 95.6}
+{'id': 201907, 'name': Lina, 'score': 95.3}
+{'id': 201908, 'name': Jack, 'score': 81.1}
+{'id': 201909, 'name': Bob, 'score': 81.1}
+{'id': 201910, 'name': Stack, 'score': 95.3}
+[info]-[1653715734.539761(S)] 'test_CSVReader_FILE'-'../data/info.csv'
+{'id': 201901, 'name': Tom, 'score': 81.1}
+{'id': 201902, 'name': Jhon, 'score': 0}
+{'id': 201903, 'name': Jerry, 'score': 95.3}
+{'id': 201904, 'name': , 'score': 95.6}
+{'id': 201905, 'name': Mary, 'score': 81.1}
+{'id': 201906, 'name': Lily, 'score': 95.6}
+{'id': 201907, 'name': Lina, 'score': 95.3}
+{'id': 201908, 'name': Jack, 'score': 81.1}
+{'id': 201909, 'name': Bob, 'score': 81.1}
+{'id': 201910, 'name': Stack, 'score': 95.3}
+[info]-[1653715734.539857(S)] 'test_CSVWriter_OFS'-'../data/refpoint3f_h.csv'
+[info]-[1653715734.540002(S)] 'test_CSVWriter_FILE'-'../data/refpoint3f_h.csv'
