@@ -1,19 +1,21 @@
 #pragma once
 
 /**
- * @file csv.h
- * @author csl (3079625093@qq.com)
- * @version 0.1
- * @date 2022-01-27
+ * @file csv-v2.h
+ * @author shlchen (3079625093@qq.com)
+ * @brief
+ * @version 0.2
+ * @date 2022-05-28
  *
  * @copyright Copyright (c) 2022
+ *
  */
 
+#include "artwork/logger/logger.h"
 #include <algorithm>
 #include <array>
 #include <cstring>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -22,264 +24,22 @@
 
 namespace ns_csv {
 
-  /**
-   * @brief overload the operator '<<' for type 'std::stringstream' to avoid escape the space for string
-   *
-   * @param os the std::stringstream
-   * @param str the string
-   * @return std::stringstream&
-   */
-  static std::stringstream &operator>>(std::stringstream &os, std::string &str) {
-    // don't use str << os, this will escape the space
-    str = os.str();
-    return os;
-  }
-
 #define THROW_EXCEPTION(where, msg) \
   throw std::runtime_error(std::string("[ error from 'libcsv'-'") + #where + "' ] " + msg)
 
-#pragma region csv read
-
-/**
- * @brief read all items in the ifstream
- *
- * @param ifs the input fstream
- * @param splitor the splitor
- * @param itemType the type of the item in the csv file
- * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member variables.
- *
- * @return std::vector<itemType> data
- */
-#define CSV_READ_IFS_ALL(ifs, splitor, itemType, ...)             \
-  [](std::ifstream &ifs, char spor) -> std::vector<itemType> {    \
-    std::vector<itemType> data;                                   \
-    std::string strLine;                                          \
-    while (std::getline(ifs, strLine)) {                          \
-      auto strVec = ns_csv::ns_priv::split(strLine, spor);        \
-      data.push_back(itemType{LAMBDA_PACK(strVec, __VA_ARGS__)}); \
-    }                                                             \
-    return data;                                                  \
-  }(ifs, splitor)
-
-/**
- * @brief read all items in the ifstream
- *
- * @param ifs the input fstream
- * @param splitor the splitor
- * @param itemType the type of the item in the csv file
- * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member variables.
- *
- * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
- */
-#define CSV_READ_IFS_ALL_H(ifs, splitor, itemType, ...)                   \
-  [](std::ifstream &ifs,                                                  \
-     char spor) -> std::pair<ARRAY(__VA_ARGS__), std::vector<itemType>> { \
-    std::string strLine;                                                  \
-    std::getline(ifs, strLine);                                           \
-    auto vec = ns_csv::ns_priv::split(strLine, spor);                     \
-    ARRAY(__VA_ARGS__)                                                    \
-    header;                                                               \
-    for (int i = 0; i != COUNT_MACRO_VAR_ARGS(__VA_ARGS__); ++i)          \
-      header.at(i) = vec.at(i);                                           \
-    auto data = CSV_READ_IFS_ALL(ifs, spor, itemType, __VA_ARGS__);       \
-    return {header, data};                                                \
-  }(ifs, splitor)
-
-/**
- * @brief read all items in the ifstream
- *
- * @param ifs the input fstream
- * @param splitor the splitor
- * @param itemNum the number of the items to read
- * @param itemType the type of the item in the csv file
- * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member variables.
- *
- * @return std::vector<itemType> data
- */
-#define CSV_READ_IFS_CER(ifs, splitor, itemNum, itemType, ...)      \
-  [](std::ifstream &ifs, char spor) -> std::vector<itemType> {      \
-    std::vector<itemType> data;                                     \
-    std::string strLine;                                            \
-    int itemCount = 0;                                              \
-    while (itemCount++ < itemNum) {                                 \
-      if (std::getline(ifs, strLine)) {                             \
-        auto strVec = ns_csv::ns_priv::split(strLine, spor);        \
-        data.push_back(itemType{LAMBDA_PACK(strVec, __VA_ARGS__)}); \
-      } else                                                        \
-        break;                                                      \
-    }                                                               \
-    return data;                                                    \
-  }(ifs, splitor)
-
-/**
- * @brief read all items in the ifstream
- *
- * @param ifs the input fstream
- * @param splitor the splitor
- * @param itemNum the number of the items to read
- * @param itemType the type of the item in the csv file
- * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member variables.
- *
- * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
- */
-#define CSV_READ_IFS_CER_H(ifs, splitor, itemNum, itemType, ...)             \
-  [](std::ifstream &ifs,                                                     \
-     char spor) -> std::pair<ARRAY(__VA_ARGS__), std::vector<itemType>> {    \
-    std::string strLine;                                                     \
-    std::getline(ifs, strLine);                                              \
-    auto vec = ns_csv::ns_priv::split(strLine, spor);                        \
-    ARRAY(__VA_ARGS__)                                                       \
-    header;                                                                  \
-    for (int i = 0; i != COUNT_MACRO_VAR_ARGS(__VA_ARGS__); ++i)             \
-      header.at(i) = vec.at(i);                                              \
-    auto data = CSV_READ_IFS_CER(ifs, spor, itemNum, itemType, __VA_ARGS__); \
-    return {header, data};                                                   \
-  }(ifs, splitor)
-
-/**
- * @brief read all items in the ifstream
- *
- * @param fileName the file name
- * @param splitor the splitor
- * @param itemType the type of the item in the csv file
- * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member variables.
- *
- * @return std::vector<itemType> data
- */
-#define CSV_READ_FILE(fileName, splitor, itemType, ...)             \
-  [](const std::string &name, char spor) -> std::vector<itemType> { \
-    std::ifstream ifs(name);                                        \
-    return CSV_READ_IFS_ALL(ifs, spor, itemType, __VA_ARGS__);      \
-  }(fileName, splitor)
-
-/**
- * @brief read all items in the ifstream
- *
- * @param fileName the file name
- * @param splitor the splitor
- * @param itemType the type of the item in the csv file
- * @param ... the types of the members,
- *             it's order is same as the declaration sequence of member variables.
- *
- * @return std::pair(std::array<std::string, LabNum>, std::vector<itemType>) {header, data}
- */
-#define CSV_READ_FILE_H(fileName, splitor, itemType, ...)                 \
-  [](const std::string &name,                                             \
-     char spor) -> std::pair<ARRAY(__VA_ARGS__), std::vector<itemType>> { \
-    std::ifstream ifs(name);                                              \
-    std::string strLine;                                                  \
-    std::getline(ifs, strLine);                                           \
-    auto vec = ns_csv::ns_priv::split(strLine, spor);                     \
-    ARRAY(__VA_ARGS__)                                                    \
-    header;                                                               \
-    for (int i = 0; i != COUNT_MACRO_VAR_ARGS(__VA_ARGS__); ++i)          \
-      header.at(i) = vec.at(i);                                           \
-    auto data = CSV_READ_IFS_ALL(ifs, spor, itemType, __VA_ARGS__);       \
-    return {header, data};                                                \
-  }(fileName, splitor)
-
-#pragma endregion
-
-#pragma region csv write
-
-/**
- * @brief write data to a csv file
- *
- * @param ofs the out fstream
- * @param data the data array
- * @param splitor the splitor
- * @param ... the [methods | member name] to get members from a item
- *
- * @return void
- */
-#define CSV_WRITE_OFS(ofs, data, splitor, ...)                         \
-  [](std::ofstream &ofs, const decltype(data) &d, char spor) -> void { \
-    for (const auto &elem : d)                                         \
-      ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);              \
-    return;                                                            \
-  }(ofs, data, splitor)
-
-/**
- * @brief write data to a csv file
- *
- * @param osftream the out fstream
- * @param header the header labels
- * @param data the data array
- * @param splitor the splitor
- * @param ... the [methods | member name] to get members from a item
- *
- * @return void
- */
-#define CSV_WRITE_OFS_H(ofs, header, data, splitor, ...)  \
-  [](std::ofstream &ofs, const ARRAY(__VA_ARGS__) & h,    \
-     const decltype(data) &d, char spor) -> void {        \
-    ns_csv::ns_priv::__print__(ofs, spor, h);             \
-    for (const auto &elem : d)                            \
-      ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__); \
-    return;                                               \
-  }(ofs, header, data, splitor)
-
-/**
- * @brief write data to a csv file
- *
- * @param fileName the file name
- * @param data the data array
- * @param splitor the splitor
- * @param ... the [methods | member name] to get members from a item
- *
- * @return void
- */
-#define CSV_WRITE_FILE(fileName, data, splitor, ...)                        \
-  [](const std::string &name, const decltype(data) &d, char spor) -> void { \
-    std::ofstream ofs(name);                                                \
-    for (const auto &elem : d)                                              \
-      ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);                   \
-    ofs.close();                                                            \
-    return;                                                                 \
-  }(fileName, data, splitor)
-
-/**
- * @brief write data to a csv file
- *
- * @param fileName the file name
- * @param header the header labels
- * @param data the data array
- * @param splitor the splitor
- * @param ... the [methods | member name] to get members from a item
- *
- * @return void
- */
-#define CSV_WRITE_FILE_H(fileName, header, data, splitor, ...) \
-  [](const std::string &name, const ARRAY(__VA_ARGS__) & h,    \
-     const decltype(data) &d, char spor) -> void {             \
-    std::ofstream ofs(name);                                   \
-    ns_csv::ns_priv::__print__(ofs, spor, h);                  \
-    for (const auto &elem : d)                                 \
-      ns_csv::ns_priv::__print__(ofs, spor, __VA_ARGS__);      \
-    ofs.close();                                               \
-    return;                                                    \
-  }(fileName, header, data, splitor)
-
-#pragma endregion
-
-#pragma region help functions
   namespace ns_priv {
 
+#pragma region help functions
     /**
-     * \brief a function to split a string to some string elements according the splitor
+     * @brief a function to split a string to some string elements according the splitor
      *
-     * \param str the string to be splited \param splitor the splitor char
-     * \param ignoreEmpty whether ignoring the empty string element or not
+     * @param str the string to be splited
+     * @param splitor the splitor char
+     * @param ignoreEmpty whether ignoring the empty string element or not
      *
-     * \return the splited string vector
+     * @return the splited string vector
      */
-    static std::vector<std::string> split(const std::string &str, char splitor,
-                                          bool ignoreEmpty = true) {
+    static std::vector<std::string> __split__(const std::string &str, char splitor, bool ignoreEmpty = false) {
       std::vector<std::string> vec;
       auto iter = str.cbegin();
       while (true) {
@@ -295,9 +55,26 @@ namespace ns_csv {
     }
 
     /**
-     * @brief used to cast types
+     * @brief a function to split a string to some string elements according the splitor
+     *
+     * @param str the string to be splited
+     * @param splitor the splitor char
+     * @param ignoreEmpty whether ignoring the empty string element or not
+     *
+     * @return the splited string vector
      */
-    static std::stringstream strStream;
+    static std::string __combine__(const std::vector<std::string> &strVec, char splitor, bool ignoreEmpty = false) {
+      std::stringstream stream;
+      for (const auto &elem : strVec) {
+        if (elem.empty() && ignoreEmpty) {
+          continue;
+        }
+        stream << elem << splitor;
+      }
+      std::string str = stream.str();
+      str.pop_back();
+      return str;
+    }
 
     template <std::size_t Size>
     void __print__(std::ofstream &ofs, char splitor,
@@ -330,10 +107,103 @@ namespace ns_csv {
       return __print__(ofs, splitor, argvs...);
     }
 
-  } // namespace ns_priv
+    static std::stringstream &operator>>(std::stringstream &os, char *str) {
+      // don't define, 'os >> str' will escape the space
+      strcpy(str, os.str().c_str());
+      return os;
+    }
+
+    static std::stringstream &operator>>(std::stringstream &os, std::string &str) {
+      // don't define, 'os >> str' will escape the space
+      str = os.str();
+      return os;
+    }
+
+// Get the type of a struct member variable
+#define STRUCT_MEM_TYPE(TYPE, MEMBER) decltype(((struct TYPE *)0)->MEMBER)
+
+    // Boxing a structure member variable to obtain its type and offset
+    template <typename MemType, std::size_t MemOffset>
+    struct STRUCT_MEM_PACK {
+      using mem_type = MemType;
+      static constexpr std::size_t mem_offset = MemOffset;
+    };
+
+    // Template functions for assigning values to structural objects
+    template <typename StructType>
+    void __str_vec_to_obj__(const std::vector<std::string> &strVec, StructType &obj, std::size_t strIdx = 0) {
+    }
+
+    // Template functions for assigning values to structural objects
+    template <typename StructType, typename MemPack, typename... MemPacks>
+    void __str_vec_to_obj__(const std::vector<std::string> &strVec, StructType &obj, std::size_t strIdx = 0) {
+      std::stringstream stream;
+      typename MemPack::mem_type elem{};
+      if (!strVec.at(strIdx).empty()) {
+        // if 'cur str' is empty, use defalut to agssign the member
+        stream << strVec.at(strIdx);
+        stream >> elem;
+      }
+      // get reference of the member
+      *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset)) = elem;
+      __str_vec_to_obj__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
+    }
+
+    template <typename StructType>
+    void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
+    }
+
+    template <typename StructType, typename MemPack, typename... MemPacks>
+    void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
+      std::stringstream stream;
+      typename MemPack::mem_type elem;
+      // get reference of the member
+      elem = *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset));
+      stream << elem;
+      stream >> strVec.at(strIdx);
+      __obj_to_str_vec__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
+    }
+
 #pragma endregion
 
-#pragma region csv reader and write
+#pragma region macros
+
+// Auxiliary macro used to box a structure type and one of its member variables
+#define CSV_STRUCT_MEM(TYPE, MEMBER) \
+  ns_csv::ns_priv::STRUCT_MEM_PACK<STRUCT_MEM_TYPE(TYPE, MEMBER), offsetof(TYPE, MEMBER)>
+
+// a macro launcher
+#define _CSV_MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, N, ...) N
+#define _CSV_COUNT_MACRO_VAR_ARGS(...) _CSV_MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+
+#define _CSV_MACRO_COMBINE_2(MACRO, ARGS_COUNT) MACRO##ARGS_COUNT
+#define _CSV_MACRO_COMBINE_1(MACRO, ARGS_COUNT) _CSV_MACRO_COMBINE_2(MACRO, ARGS_COUNT)
+#define _CSV_MACRO_COMBINE(MACRO, ARGS_COUNT) _CSV_MACRO_COMBINE_1(MACRO, ARGS_COUNT)
+
+#define _CSV_MACRO_LAUNCHER(MACRO, ...)                             \
+  _CSV_MACRO_COMBINE(MACRO, _CSV_COUNT_MACRO_VAR_ARGS(__VA_ARGS__)) \
+  (__VA_ARGS__)
+
+#define _CSV_STRUCT_2(TYPE, MEMBER) CSV_STRUCT_MEM(TYPE, MEMBER)
+#define _CSV_STRUCT_3(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_2(TYPE, __VA_ARGS__)
+#define _CSV_STRUCT_4(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_3(TYPE, __VA_ARGS__)
+#define _CSV_STRUCT_5(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_4(TYPE, __VA_ARGS__)
+#define _CSV_STRUCT_6(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_5(TYPE, __VA_ARGS__)
+#define _CSV_STRUCT_7(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_6(TYPE, __VA_ARGS__)
+#define _CSV_STRUCT_8(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_7(TYPE, __VA_ARGS__)
+#define _CSV_STRUCT_9(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_8(TYPE, __VA_ARGS__)
+#define _CSV_STRUCT_10(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_9(TYPE, __VA_ARGS__)
+
+// Select which macro to call according to the number of parameters
+// If the structure has more than 9 member variables, you need to directly use macro 'CSV_STRUCT_MEM'
+#define CSV_STRUCT(TYPE, ...) \
+  TYPE, _CSV_MACRO_LAUNCHER(_CSV_STRUCT_, TYPE, __VA_ARGS__)
+
+#pragma endregion
+
+  } // namespace ns_priv
+
+#pragma region csv reader
 
   namespace ns_priv {
     class Reader {
@@ -349,7 +219,8 @@ namespace ns_csv {
       bool readLine(char splitor = ',', ElemTypes &...elems) {
         std::string str;
         if (std::getline(*(this->_ifs), str)) {
-          auto strVec = ns_priv::split(str, splitor);
+          auto strVec = ns_priv::__split__(str, splitor, false);
+          strVec.resize(sizeof...(ElemTypes));
           this->parse(strVec, 0, elems...);
           return true;
         }
@@ -366,8 +237,7 @@ namespace ns_csv {
           stream >> elem;
         } else {
           // empty
-          ElemType val{};
-          memcpy((void *)(&elem), (void *)(&val), sizeof(elem));
+          elem = ElemType{};
         }
         return this->parse(strVec, index + 1, elems...);
       }
@@ -442,8 +312,143 @@ namespace ns_csv {
     static Ptr create(std::ifstream &ifs) {
       return std::make_shared<ns_priv::StreamReader>(ifs);
     }
+
+  public:
+    /**
+     * @brief read all items in the ifstream
+     *
+     * @param ifs the input fstream
+     * @param splitor the splitor
+     *
+     * @return std::vector<itemType> data
+     */
+    template <typename StructType, typename... MemPacks>
+    static std::vector<StructType> read(std::ifstream &ifs, char splitor) {
+      std::vector<StructType> data;
+      std::string strLine;
+      StructType obj{};
+      while (std::getline(ifs, strLine)) {
+        auto strVec = ns_csv::ns_priv::__split__(strLine, splitor, false);
+        strVec.resize(sizeof...(MemPacks));
+        ns_priv::__str_vec_to_obj__<StructType, MemPacks...>(strVec, obj);
+        data.push_back(obj);
+      }
+      return data;
+    }
+
+    /**
+     * @brief read all items in the ifstream with header
+     *
+     * @param ifs the input fstream
+     * @param splitor the splitor
+     *
+     * @return std::vector<itemType> data
+     */
+    template <typename StructType, typename... MemPacks>
+    static auto readWithHeader(std::ifstream &ifs, char splitor) {
+      std::string strLine;
+      // header
+      std::getline(ifs, strLine);
+      auto vec = ns_csv::ns_priv::__split__(strLine, splitor, false);
+      vec.resize(sizeof...(MemPacks));
+      std::array<std::string, sizeof...(MemPacks)> header;
+      for (int i = 0; i != header.size(); ++i) {
+        header.at(i) = vec.at(i);
+      }
+      // content
+      std::vector<StructType> data = read<StructType, MemPacks...>(ifs, splitor);
+      return std::make_pair(header, data);
+    }
+
+    /**
+     * @brief read some items in the ifstream
+     *
+     * @param ifs the input fstream
+     * @param splitor the splitor
+     * @param itemNum the number of the items to read
+     *
+     * @return std::vector<itemType> data
+     */
+    template <typename StructType, typename... MemPacks>
+    static std::vector<StructType> read(std::ifstream &ifs, char splitor, std::size_t itemNum) {
+      std::vector<StructType> data;
+      std::string strLine;
+      StructType obj{};
+      int itemCount = 0;
+      while (itemCount++ < itemNum) {
+        if (std::getline(ifs, strLine)) {
+          auto strVec = ns_csv::ns_priv::__split__(strLine, splitor, false);
+          strVec.resize(sizeof...(MemPacks));
+          ns_priv::__str_vec_to_obj__<StructType, MemPacks...>(strVec, obj);
+          data.push_back(obj);
+        } else {
+          break;
+        }
+      }
+      return data;
+    }
+
+    /**
+     * @brief read some items in the ifstream with header
+     *
+     * @param ifs the input fstream
+     * @param splitor the splitor
+     * @param itemNum the number of the items to read
+     *
+     * @return std::vector<itemType> data
+     */
+    template <typename StructType, typename... MemPacks>
+    static auto readWithHeader(std::ifstream &ifs, char splitor, std::size_t itemNum) {
+      std::string strLine;
+      // header
+      std::getline(ifs, strLine);
+      auto vec = ns_csv::ns_priv::__split__(strLine, splitor, false);
+      vec.resize(sizeof...(MemPacks));
+      std::array<std::string, sizeof...(MemPacks)> header;
+      for (int i = 0; i != header.size(); ++i) {
+        header.at(i) = vec.at(i);
+      }
+      // content
+      std::vector<StructType> data = read<StructType, MemPacks...>(ifs, splitor, itemNum);
+      return std::make_pair(header, data);
+    }
+
+    /**
+     * @brief read all items in the file
+     *
+     * @param fileName the file name
+     * @param splitor the splitor
+     *
+     * @return std::vector<itemType> data
+     */
+    template <typename StructType, typename... MemPacks>
+    static std::vector<StructType> read(const std::string &fileName, char splitor) {
+      std::ifstream ifs(fileName);
+      auto data = CSVReader::read<StructType, MemPacks...>(ifs, splitor);
+      ifs.close();
+      return data;
+    }
+
+    /**
+     * @brief read all items in the file with header
+     *
+     * @param fileName the file name
+     * @param splitor the splitor
+     *
+     * @return std::vector<itemType> data
+     */
+    template <typename StructType, typename... MemPacks>
+    static auto readWithHeader(const std::string &fileName, char splitor) {
+      std::ifstream ifs(fileName);
+      auto data = CSVReader::readWithHeader<StructType, MemPacks...>(ifs, splitor);
+      ifs.close();
+      return data;
+    }
   };
 
+#pragma endregion
+
+#pragma region csv writer
   namespace ns_priv {
     class Writer {
     public:
@@ -529,94 +534,75 @@ namespace ns_csv {
     static Ptr create(std::ofstream &ofs) {
       return std::make_shared<ns_priv::StreamWriter>(ofs);
     }
+
+  public:
+    /**
+     * @brief write data to a csv file
+     *
+     * @param ofs the out fstream
+     * @param splitor the splitor
+     * @param data the data array
+     */
+    template <typename StructType, typename... MemPacks>
+    static void write(std::ofstream &ofs, char splitor, const std::vector<StructType> &data) {
+      std::vector<std::string> strVec(sizeof...(MemPacks));
+      for (const auto &elem : data) {
+        ns_priv::__obj_to_str_vec__<StructType, MemPacks...>(strVec, elem);
+        ofs << ns_priv::__combine__(strVec, splitor, false) << '\n';
+      }
+    }
+
+    /**
+     * @brief write data to a csv file
+     *
+     * @param ofs the out fstream
+     * @param splitor the splitor
+     * @param header the header labels
+     * @param data the data array
+     */
+    template <typename StructType, typename... MemPacks>
+    static void writeWithHeader(std::ofstream &ofs, char splitor,
+                                const std::array<std::string, sizeof...(MemPacks)> &header,
+                                const std::vector<StructType> &data) {
+      std::vector<std::string> strVec(sizeof...(MemPacks));
+      for (int i = 0; i != header.size(); ++i) {
+        strVec.at(i) = header.at(i);
+      }
+      ofs << ns_priv::__combine__(strVec, splitor, false) << '\n';
+      CSVWriter::write<StructType, MemPacks...>(ofs, splitor, data);
+    }
+
+    /**
+     * @brief write data to a csv file
+     *
+     * @param fileName the file name
+     * @param splitor the splitor
+     * @param data the data array
+     */
+    template <typename StructType, typename... MemPacks>
+    static void write(const std::string &fileName, char splitor, const std::vector<StructType> &data) {
+      std::ofstream ofs(fileName);
+      CSVWriter::write<StructType, MemPacks...>(ofs, splitor, data);
+      ofs.close();
+    }
+
+    /**
+     * @brief write data to a csv file with header
+     *
+     * @param fileName the file name
+     * @param splitor the splitor
+     * @param header the header labels
+     * @param data the data array
+     */
+    template <typename StructType, typename... MemPacks>
+    static void writeWithHeader(const std::string &fileName, char splitor,
+                                const std::array<std::string, sizeof...(MemPacks)> &header,
+                                const std::vector<StructType> &data) {
+      std::ofstream ofs(fileName);
+      CSVWriter::writeWithHeader<StructType, MemPacks...>(ofs, splitor, header, data);
+      ofs.close();
+    }
   };
-
-#pragma endregion
-
-#pragma region help macroes
-
-#define MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, N, \
-                                  ...) N
-
-#define COUNT_MACRO_VAR_ARGS(...) \
-  MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
-
-#define MACRO_COMBINE_2(MACRO, ARGS_COUNT) MACRO##ARGS_COUNT
-#define MACRO_COMBINE_1(MACRO, ARGS_COUNT) MACRO_COMBINE_2(MACRO, ARGS_COUNT)
-#define MACRO_COMBINE(MACRO, ARGS_COUNT) MACRO_COMBINE_1(MACRO, ARGS_COUNT)
-
-#define ARRAY(...) std::array<std::string, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)>
-
-/**
- * @brief the method to get element's data when writing data to csv file
- */
-#define CSV_ELEM(method) elem.method
-
-/**
- * @brief organize the cvs file headers
- */
-#define CSV_HEADER(...) \
-  ARRAY(__VA_ARGS__) { __VA_ARGS__ }
-
-#pragma endregion
-
-#pragma region read macroes
-
-/**
- * @brief use to cast string type to others
- */
-#define STR_TRANS(strStream, str, val) \
-  strStream << str;                    \
-  strStream >> val;                    \
-  strStream.clear();                   \
-  strStream.str("")
-
-/**
- * @brief generate the lambda function to trans the string to the type 'dtsType'
- */
-#define LAMBDA_TRANS(srcStr, dstType)                                   \
-  [](std::stringstream &strStream, const std::string &str) -> dstType { \
-    dstType val;                                                        \
-    STR_TRANS(strStream, str, val);                                     \
-    return val;                                                         \
-  }(ns_csv::ns_priv::strStream, srcStr)
-
-/**
- * @brief generate the param list with lambda
- */
-#define LAMBDA_PACK(strVec, ...)                                 \
-  MACRO_COMBINE(LAMBDA_PACK_, COUNT_MACRO_VAR_ARGS(__VA_ARGS__)) \
-  (strVec, __VA_ARGS__)
-
-#define LAMBDA_PACK_10(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 10), dstType), \
-      LAMBDA_PACK_9(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_9(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 9), dstType), \
-      LAMBDA_PACK_8(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_8(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 8), dstType), \
-      LAMBDA_PACK_7(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_7(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 7), dstType), \
-      LAMBDA_PACK_6(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_6(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 6), dstType), \
-      LAMBDA_PACK_5(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_5(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 5), dstType), \
-      LAMBDA_PACK_4(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_4(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 4), dstType), \
-      LAMBDA_PACK_3(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_3(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 3), dstType), \
-      LAMBDA_PACK_2(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_2(strVec, dstType, ...)            \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 2), dstType), \
-      LAMBDA_PACK_1(strVec, __VA_ARGS__)
-#define LAMBDA_PACK_1(strVec, dstType) \
-  LAMBDA_TRANS(strVec.at(strVec.size() - 1), dstType)
 
 #pragma endregion
 
