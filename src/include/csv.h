@@ -11,7 +11,6 @@
  *
  */
 
-#include "artwork/logger/logger.h"
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -76,14 +75,6 @@ namespace ns_csv {
       return str;
     }
 
-    template <std::size_t Size>
-    void __print__(std::ofstream &ofs, char splitor,
-                   const std::array<std::string, Size> &header) {
-      for (int i = 0; i != Size - 1; ++i)
-        ofs << header.at(i) << splitor;
-      ofs << header.at(Size - 1) << '\n';
-    }
-
     template <typename ArgvType>
     void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv) {
       ofs << argv << '\n';
@@ -93,16 +84,13 @@ namespace ns_csv {
     /**
      * @brief print the argvs with template param list
      *
-     * @tparam ArgvType
-     * @tparam ArgvsType
      * @param ofs the output file stream
      * @param splitor the splitor
      * @param argv one of the argvs
      * @param argvs the else argvs
      */
     template <typename ArgvType, typename... ArgvsType>
-    void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv,
-                   const ArgvsType &...argvs) {
+    void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv, const ArgvsType &...argvs) {
       ofs << argv << splitor;
       return __print__(ofs, splitor, argvs...);
     }
@@ -156,10 +144,8 @@ namespace ns_csv {
     template <typename StructType, typename MemPack, typename... MemPacks>
     void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
       std::stringstream stream;
-      typename MemPack::mem_type elem;
       // get reference of the member
-      elem = *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset));
-      stream << elem;
+      stream << *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset));
       stream >> strVec.at(strIdx);
       __obj_to_str_vec__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
     }
