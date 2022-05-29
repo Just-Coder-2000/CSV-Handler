@@ -3,12 +3,12 @@
 /**
  * @file csv-v2.h
  * @author shlchen (3079625093@qq.com)
- * @brief 
+ * @brief
  * @version 0.2
  * @date 2022-05-28
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #include "artwork/logger/logger.h"
@@ -108,8 +108,14 @@ namespace ns_csv {
     }
 
     static std::stringstream &operator>>(std::stringstream &os, char *str) {
-      // don't use os >> str, this will escape the space
+      // don't define, 'os >> str' will escape the space
       strcpy(str, os.str().c_str());
+      return os;
+    }
+
+    static std::stringstream &operator>>(std::stringstream &os, std::string &str) {
+      // don't define, 'os >> str' will escape the space
+      str = os.str();
       return os;
     }
 
@@ -134,11 +140,12 @@ namespace ns_csv {
       std::stringstream stream;
       typename MemPack::mem_type elem{};
       if (!strVec.at(strIdx).empty()) {
+        // if 'cur str' is empty, use defalut to agssign the member
         stream << strVec.at(strIdx);
         stream >> elem;
       }
-      // memory copy
-      memcpy((void *)((char *)(&obj) + MemPack::mem_offset), (void *)(&elem), sizeof(elem));
+      // get reference of the member
+      *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset)) = elem;
       __str_vec_to_obj__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
     }
 
@@ -150,8 +157,8 @@ namespace ns_csv {
     void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
       std::stringstream stream;
       typename MemPack::mem_type elem;
-      // memory copy
-      memcpy((void *)(&elem), (void *)((char *)(&obj) + MemPack::mem_offset), sizeof(elem));
+      // get reference of the member
+      elem = *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset));
       stream << elem;
       stream >> strVec.at(strIdx);
       __obj_to_str_vec__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
@@ -230,8 +237,7 @@ namespace ns_csv {
           stream >> elem;
         } else {
           // empty
-          ElemType val{};
-          memcpy((void *)(&elem), (void *)(&val), sizeof(elem));
+          elem = ElemType{};
         }
         return this->parse(strVec, index + 1, elems...);
       }

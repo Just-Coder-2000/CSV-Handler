@@ -16,7 +16,7 @@
 
 struct Info {
   int _id;
-  char _name[20];
+  std::string _name;
   float _score;
 };
 std::ostream &operator<<(std::ostream &os, const Info &obj) {
