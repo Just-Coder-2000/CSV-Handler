@@ -54,13 +54,13 @@ namespace ns_csv {
     }
 
     /**
-     * @brief a function to split a string to some string elements according the splitor
+     * @brief a function to combine some string elements to a string according the splitor
      *
      * @param str the string to be splited
      * @param splitor the splitor char
      * @param ignoreEmpty whether ignoring the empty string element or not
      *
-     * @return the splited string vector
+     * @return the combined string
      */
     static std::string __combine__(const std::vector<std::string> &strVec, char splitor, bool ignoreEmpty = false) {
       std::stringstream stream;
