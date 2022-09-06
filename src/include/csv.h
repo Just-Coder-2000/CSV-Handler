@@ -24,12 +24,23 @@
 
 namespace ns_csv {
 
-#define THROW_EXCEPTION(where, msg) \
+#define CSV_THROW_EXCEPTION(where, msg) \
   throw std::runtime_error(std::string("[ error from 'libcsv'-'") + #where + "' ] " + msg)
 
   namespace ns_priv {
 
 #pragma region help functions
+
+    static std::string trim(const std::string &str) {
+      auto p1 = str.find_first_not_of(' ');
+      auto p2 = str.find_last_not_of(' ');
+      if (p1 != std::string::npos && p2 != std::string::npos) {
+        return str.substr(p1, p2 - p1 + 1);
+      } else {
+        return {};
+      }
+    }
+
     /**
      * @brief a function to split a string to some string elements according the splitor
      *
@@ -45,10 +56,12 @@ namespace ns_csv {
       while (true) {
         auto pos = std::find(iter, str.cend(), splitor);
         auto elem = std::string(iter, pos);
-        if ((!ignoreEmpty) || (ignoreEmpty && !elem.empty()))
-          vec.push_back(elem);
-        if (pos == str.cend())
+        if ((!ignoreEmpty) || (ignoreEmpty && !elem.empty())) {
+          vec.push_back(trim(elem));
+        }
+        if (pos == str.cend()) {
           break;
+        }
         iter = ++pos;
       }
       return vec;
@@ -65,7 +78,7 @@ namespace ns_csv {
      */
     static std::string __combine__(const std::vector<std::string> &strVec, char splitor, bool ignoreEmpty = false) {
       std::stringstream stream;
-      for (const auto &elem : strVec) {
+      for (const auto &elem: strVec) {
         if (elem.empty() && ignoreEmpty) {
           continue;
         }
@@ -76,7 +89,7 @@ namespace ns_csv {
       return str;
     }
 
-    template <typename ArgvType>
+    template<typename ArgvType>
     void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv) {
       ofs << argv << '\n';
       return;
@@ -90,7 +103,7 @@ namespace ns_csv {
      * @param argv one of the argvs
      * @param argvs the else argvs
      */
-    template <typename ArgvType, typename... ArgvsType>
+    template<typename ArgvType, typename... ArgvsType>
     void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv, const ArgvsType &...argvs) {
       ofs << argv << splitor;
       return __print__(ofs, splitor, argvs...);
@@ -112,19 +125,19 @@ namespace ns_csv {
 #define STRUCT_MEM_TYPE(TYPE, MEMBER) decltype(((struct TYPE *)0)->MEMBER)
 
     // Boxing a structure member variable to obtain its type and offset
-    template <typename MemType, std::size_t MemOffset>
+    template<typename MemType, std::size_t MemOffset>
     struct STRUCT_MEM_PACK {
       using mem_type = MemType;
       static constexpr std::size_t mem_offset = MemOffset;
     };
 
     // Template functions for assigning values to structural objects
-    template <typename StructType>
+    template<typename StructType>
     void __str_vec_to_obj__(const std::vector<std::string> &strVec, StructType &obj, std::size_t strIdx = 0) {
     }
 
     // Template functions for assigning values to structural objects
-    template <typename StructType, typename MemPack, typename... MemPacks>
+    template<typename StructType, typename MemPack, typename... MemPacks>
     void __str_vec_to_obj__(const std::vector<std::string> &strVec, StructType &obj, std::size_t strIdx = 0) {
       std::stringstream stream;
       typename MemPack::mem_type elem{};
@@ -134,21 +147,21 @@ namespace ns_csv {
         stream >> elem;
       }
       // get reference of the member
-      *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset)) = elem;
-      __str_vec_to_obj__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
+      *((typename MemPack::mem_type *) ((char *) (&obj) + MemPack::mem_offset)) = elem;
+      __str_vec_to_obj__ < StructType, MemPacks...>(strVec, obj, strIdx + 1);
     }
 
-    template <typename StructType>
+    template<typename StructType>
     void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
     }
 
-    template <typename StructType, typename MemPack, typename... MemPacks>
+    template<typename StructType, typename MemPack, typename... MemPacks>
     void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
       std::stringstream stream;
       // get reference of the member
-      stream << *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset));
+      stream << *((typename MemPack::mem_type *) ((char *) (&obj) + MemPack::mem_offset));
       stream >> strVec.at(strIdx);
-      __obj_to_str_vec__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
+      __obj_to_str_vec__ < StructType, MemPacks...>(strVec, obj, strIdx + 1);
     }
 
 #pragma endregion
@@ -190,6 +203,7 @@ namespace ns_csv {
 
   } // namespace ns_priv
 
+
 #pragma region csv reader
 
   namespace ns_priv {
@@ -202,7 +216,7 @@ namespace ns_csv {
       /**
        * @brief get next std::string vector and assign to the elems
        */
-      template <typename... ElemTypes>
+      template<typename... ElemTypes>
       bool readLine(char splitor = ',', ElemTypes &...elems) {
         std::string str;
         if (std::getline(*(this->_ifs), str)) {
@@ -214,8 +228,17 @@ namespace ns_csv {
         return false;
       }
 
+      bool readLine(char splitor, std::vector<std::string> &strVec) {
+        std::string str;
+        if (std::getline(*(this->_ifs), str)) {
+          strVec = ns_priv::__split__(str, splitor, false);
+          return true;
+        }
+        return false;
+      }
+
     protected:
-      template <typename ElemType, typename... ElemTypes>
+      template<typename ElemType, typename... ElemTypes>
       void parse(const std::vector<std::string> &strVec, std::size_t index,
                  ElemType &elem, ElemTypes &...elems) {
         std::stringstream stream;
@@ -241,9 +264,13 @@ namespace ns_csv {
 
     private:
       Reader() = delete;
+
       Reader(const Reader &) = delete;
+
       Reader(Reader &&) = delete;
+
       Reader &operator=(const Reader &) = delete;
+
       Reader &operator=(Reader &&) = delete;
     };
 
@@ -252,7 +279,7 @@ namespace ns_csv {
     public:
       StreamReader(std::ifstream &ifs) : Reader(&ifs) {
         if (!this->_ifs->is_open()) {
-          THROW_EXCEPTION(CSVReader, "the file stream may be invalid");
+          CSV_THROW_EXCEPTION(CSVReader, "the file stream may be invalid");
         }
       }
 
@@ -264,7 +291,7 @@ namespace ns_csv {
     public:
       FileReader(const std::string &filename) : Reader(new std::ifstream(filename)) {
         if (!this->_ifs->is_open()) {
-          THROW_EXCEPTION(CSVReader, "the file name may be invalid");
+          CSV_THROW_EXCEPTION(CSVReader, "the file name may be invalid");
         }
       }
 
@@ -309,7 +336,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static std::vector<StructType> read(std::ifstream &ifs, char splitor) {
       std::vector<StructType> data;
       std::string strLine;
@@ -331,7 +358,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static auto readWithHeader(std::ifstream &ifs, char splitor) {
       std::string strLine;
       // header
@@ -356,7 +383,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static std::vector<StructType> read(std::ifstream &ifs, char splitor, std::size_t itemNum) {
       std::vector<StructType> data;
       std::string strLine;
@@ -384,7 +411,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static auto readWithHeader(std::ifstream &ifs, char splitor, std::size_t itemNum) {
       std::string strLine;
       // header
@@ -408,7 +435,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static std::vector<StructType> read(const std::string &fileName, char splitor) {
       std::ifstream ifs(fileName);
       auto data = CSVReader::read<StructType, MemPacks...>(ifs, splitor);
@@ -424,7 +451,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static auto readWithHeader(const std::string &fileName, char splitor) {
       std::ifstream ifs(fileName);
       auto data = CSVReader::readWithHeader<StructType, MemPacks...>(ifs, splitor);
@@ -446,7 +473,7 @@ namespace ns_csv {
       /**
        * @brief use variable template parameters to write any num arguements
        */
-      template <typename... Types>
+      template<typename... Types>
       void writeLine(char splitor, const Types &...argvs) {
         ns_priv::__print__(*(this->_ofs), splitor, argvs...);
         return;
@@ -465,9 +492,13 @@ namespace ns_csv {
 
     private:
       Writer() = delete;
+
       Writer(const Writer &) = delete;
+
       Writer(Writer &&) = delete;
+
       Writer &operator=(const Writer &) = delete;
+
       Writer &operator=(Writer &&) = delete;
     };
 
@@ -475,7 +506,7 @@ namespace ns_csv {
     public:
       StreamWriter(std::ofstream &ofs) : Writer(&ofs) {
         if (!this->_ofs->is_open()) {
-          THROW_EXCEPTION(CSVWriter, "the file stream may be invalid");
+          CSV_THROW_EXCEPTION(CSVWriter, "the file stream may be invalid");
         }
       }
 
@@ -486,7 +517,7 @@ namespace ns_csv {
     public:
       FileWriter(const std::string &filename) : Writer(new std::ofstream(filename)) {
         if (!this->_ofs->is_open()) {
-          THROW_EXCEPTION(CSVWriter, "the file name may be invalid");
+          CSV_THROW_EXCEPTION(CSVWriter, "the file name may be invalid");
         }
       }
 
@@ -530,10 +561,10 @@ namespace ns_csv {
      * @param splitor the splitor
      * @param data the data array
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static void write(std::ofstream &ofs, char splitor, const std::vector<StructType> &data) {
       std::vector<std::string> strVec(sizeof...(MemPacks));
-      for (const auto &elem : data) {
+      for (const auto &elem: data) {
         ns_priv::__obj_to_str_vec__<StructType, MemPacks...>(strVec, elem);
         ofs << ns_priv::__combine__(strVec, splitor, false) << '\n';
       }
@@ -547,7 +578,7 @@ namespace ns_csv {
      * @param header the header labels
      * @param data the data array
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static void writeWithHeader(std::ofstream &ofs, char splitor,
                                 const std::array<std::string, sizeof...(MemPacks)> &header,
                                 const std::vector<StructType> &data) {
@@ -566,7 +597,7 @@ namespace ns_csv {
      * @param splitor the splitor
      * @param data the data array
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static void write(const std::string &fileName, char splitor, const std::vector<StructType> &data) {
       std::ofstream ofs(fileName);
       CSVWriter::write<StructType, MemPacks...>(ofs, splitor, data);
@@ -581,7 +612,7 @@ namespace ns_csv {
      * @param header the header labels
      * @param data the data array
      */
-    template <typename StructType, typename... MemPacks>
+    template<typename StructType, typename... MemPacks>
     static void writeWithHeader(const std::string &fileName, char splitor,
                                 const std::array<std::string, sizeof...(MemPacks)> &header,
                                 const std::vector<StructType> &data) {
@@ -593,5 +624,5 @@ namespace ns_csv {
 
 #pragma endregion
 
-#undef THROW_EXCEPTION
+#undef CSV_THROW_EXCEPTION
 } // namespace ns_csv

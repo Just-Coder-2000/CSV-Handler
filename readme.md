@@ -345,7 +345,7 @@ void test_CSVWriter_OFS() {
   std::ofstream ofs("../data/refpoint3f_h.csv");
   ns_csv::CSVWriter::Ptr writer = ns_csv::CSVWriter::create(ofs);
   writer->writeLine(',', "id", "x", "y", "z");
-  for (const auto &p : ps)
+  for (const auto &p : rpsVec)
     writer->writeLine(',', p._id, p._x, p._y, p._z);
   ofs.close();
 }
@@ -358,7 +358,7 @@ void test_CSVWriter_FILE() {
   ns_log::info("'test_CSVWriter_FILE'-'../data/refpoint3f_h.csv'");
   ns_csv::CSVWriter::Ptr writer = ns_csv::CSVWriter::create("../data/refpoint3f_h.csv");
   writer->writeLine(',', "id", "x", "y", "z");
-  for (const auto &p : ps) {
+  for (const auto &p : rpsVec) {
     writer->writeLine(',', p._id, p._x, p._y, p._z);
   }
 }
