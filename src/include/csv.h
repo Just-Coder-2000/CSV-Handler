@@ -28,6 +28,7 @@ namespace ns_csv {
   throw std::runtime_error(std::string("[ error from 'libcsv'-'") + #where + "' ] " + msg)
 
   namespace ns_priv {
+    static int WRITE_CSV_PRECISION = 8;
 
 #pragma region help functions
 
@@ -158,6 +159,7 @@ namespace ns_csv {
     template <typename StructType, typename MemPack, typename... MemPacks>
     void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
       std::stringstream stream;
+      stream << std::fixed << std::setprecision(ns_priv::WRITE_CSV_PRECISION);
       // get reference of the member
       stream << *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset));
       stream >> strVec.at(strIdx);
