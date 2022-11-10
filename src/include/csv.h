@@ -78,7 +78,7 @@ namespace ns_csv {
      */
     static std::string __combine__(const std::vector<std::string> &strVec, char splitor, bool ignoreEmpty = false) {
       std::stringstream stream;
-      for (const auto &elem: strVec) {
+      for (const auto &elem : strVec) {
         if (elem.empty() && ignoreEmpty) {
           continue;
         }
@@ -89,7 +89,7 @@ namespace ns_csv {
       return str;
     }
 
-    template<typename ArgvType>
+    template <typename ArgvType>
     void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv) {
       ofs << argv << '\n';
       return;
@@ -103,7 +103,7 @@ namespace ns_csv {
      * @param argv one of the argvs
      * @param argvs the else argvs
      */
-    template<typename ArgvType, typename... ArgvsType>
+    template <typename ArgvType, typename... ArgvsType>
     void __print__(std::ofstream &ofs, char splitor, const ArgvType &argv, const ArgvsType &...argvs) {
       ofs << argv << splitor;
       return __print__(ofs, splitor, argvs...);
@@ -125,19 +125,19 @@ namespace ns_csv {
 #define STRUCT_MEM_TYPE(TYPE, MEMBER) decltype(((struct TYPE *)0)->MEMBER)
 
     // Boxing a structure member variable to obtain its type and offset
-    template<typename MemType, std::size_t MemOffset>
+    template <typename MemType, std::size_t MemOffset>
     struct STRUCT_MEM_PACK {
       using mem_type = MemType;
       static constexpr std::size_t mem_offset = MemOffset;
     };
 
     // Template functions for assigning values to structural objects
-    template<typename StructType>
+    template <typename StructType>
     void __str_vec_to_obj__(const std::vector<std::string> &strVec, StructType &obj, std::size_t strIdx = 0) {
     }
 
     // Template functions for assigning values to structural objects
-    template<typename StructType, typename MemPack, typename... MemPacks>
+    template <typename StructType, typename MemPack, typename... MemPacks>
     void __str_vec_to_obj__(const std::vector<std::string> &strVec, StructType &obj, std::size_t strIdx = 0) {
       std::stringstream stream;
       typename MemPack::mem_type elem{};
@@ -147,21 +147,21 @@ namespace ns_csv {
         stream >> elem;
       }
       // get reference of the member
-      *((typename MemPack::mem_type *) ((char *) (&obj) + MemPack::mem_offset)) = elem;
-      __str_vec_to_obj__ < StructType, MemPacks...>(strVec, obj, strIdx + 1);
+      *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset)) = elem;
+      __str_vec_to_obj__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
     }
 
-    template<typename StructType>
+    template <typename StructType>
     void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
     }
 
-    template<typename StructType, typename MemPack, typename... MemPacks>
+    template <typename StructType, typename MemPack, typename... MemPacks>
     void __obj_to_str_vec__(std::vector<std::string> &strVec, const StructType &obj, std::size_t strIdx = 0) {
       std::stringstream stream;
       // get reference of the member
-      stream << *((typename MemPack::mem_type *) ((char *) (&obj) + MemPack::mem_offset));
+      stream << *((typename MemPack::mem_type *)((char *)(&obj) + MemPack::mem_offset));
       stream >> strVec.at(strIdx);
-      __obj_to_str_vec__ < StructType, MemPacks...>(strVec, obj, strIdx + 1);
+      __obj_to_str_vec__<StructType, MemPacks...>(strVec, obj, strIdx + 1);
     }
 
 #pragma endregion
@@ -174,8 +174,8 @@ namespace ns_csv {
 
 // a macro launcher
 #define _MACRO_SELF(X) X
-#define _CSV_MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, N, ...) N
-#define _CSV_COUNT_MACRO_VAR_ARGS(...) _MACRO_SELF(_CSV_MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
+#define _CSV_MACRO_VAR_ARGS_IMPL_COUNT(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, N, ...) N
+#define _CSV_COUNT_MACRO_VAR_ARGS(...) _MACRO_SELF(_CSV_MACRO_VAR_ARGS_IMPL_COUNT(__VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
 
 #define _CSV_MACRO_COMBINE_2(MACRO, ARGS_COUNT) MACRO##ARGS_COUNT
 #define _CSV_MACRO_COMBINE_1(MACRO, ARGS_COUNT) _CSV_MACRO_COMBINE_2(MACRO, ARGS_COUNT)
@@ -205,14 +205,13 @@ namespace ns_csv {
 #define _CSV_STRUCT_20(TYPE, MEMBER, ...) CSV_STRUCT_MEM(TYPE, MEMBER), _CSV_STRUCT_19(TYPE, __VA_ARGS__)
 
 // Select which macro to call according to the number of parameters
-// If the structure has more than 9 member variables, you need to directly use macro 'CSV_STRUCT_MEM'
+// If the structure has more than 19 member variables, you need to directly use macro 'CSV_STRUCT_MEM'
 #define CSV_STRUCT(TYPE, ...) \
   TYPE, _CSV_MACRO_LAUNCHER(_CSV_STRUCT_, TYPE, __VA_ARGS__)
 
 #pragma endregion
 
   } // namespace ns_priv
-
 
 #pragma region csv reader
 
@@ -226,7 +225,7 @@ namespace ns_csv {
       /**
        * @brief get next std::string vector and assign to the elems
        */
-      template<typename... ElemTypes>
+      template <typename... ElemTypes>
       bool readLine(char splitor = ',', ElemTypes &...elems) {
         std::string str;
         if (std::getline(*(this->_ifs), str)) {
@@ -248,7 +247,7 @@ namespace ns_csv {
       }
 
     protected:
-      template<typename ElemType, typename... ElemTypes>
+      template <typename ElemType, typename... ElemTypes>
       void parse(const std::vector<std::string> &strVec, std::size_t index,
                  ElemType &elem, ElemTypes &...elems) {
         std::stringstream stream;
@@ -346,7 +345,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static std::vector<StructType> read(std::ifstream &ifs, char splitor) {
       std::vector<StructType> data;
       std::string strLine;
@@ -368,7 +367,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static auto readWithHeader(std::ifstream &ifs, char splitor) {
       std::string strLine;
       // header
@@ -393,7 +392,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static std::vector<StructType> read(std::ifstream &ifs, char splitor, std::size_t itemNum) {
       std::vector<StructType> data;
       std::string strLine;
@@ -421,7 +420,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static auto readWithHeader(std::ifstream &ifs, char splitor, std::size_t itemNum) {
       std::string strLine;
       // header
@@ -445,7 +444,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static std::vector<StructType> read(const std::string &fileName, char splitor) {
       std::ifstream ifs(fileName);
       auto data = CSVReader::read<StructType, MemPacks...>(ifs, splitor);
@@ -461,7 +460,7 @@ namespace ns_csv {
      *
      * @return std::vector<itemType> data
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static auto readWithHeader(const std::string &fileName, char splitor) {
       std::ifstream ifs(fileName);
       auto data = CSVReader::readWithHeader<StructType, MemPacks...>(ifs, splitor);
@@ -483,7 +482,7 @@ namespace ns_csv {
       /**
        * @brief use variable template parameters to write any num arguements
        */
-      template<typename... Types>
+      template <typename... Types>
       void writeLine(char splitor, const Types &...argvs) {
         ns_priv::__print__(*(this->_ofs), splitor, argvs...);
         return;
@@ -571,10 +570,10 @@ namespace ns_csv {
      * @param splitor the splitor
      * @param data the data array
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static void write(std::ofstream &ofs, char splitor, const std::vector<StructType> &data) {
       std::vector<std::string> strVec(sizeof...(MemPacks));
-      for (const auto &elem: data) {
+      for (const auto &elem : data) {
         ns_priv::__obj_to_str_vec__<StructType, MemPacks...>(strVec, elem);
         ofs << ns_priv::__combine__(strVec, splitor, false) << '\n';
       }
@@ -588,7 +587,7 @@ namespace ns_csv {
      * @param header the header labels
      * @param data the data array
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static void writeWithHeader(std::ofstream &ofs, char splitor,
                                 const std::array<std::string, sizeof...(MemPacks)> &header,
                                 const std::vector<StructType> &data) {
@@ -607,7 +606,7 @@ namespace ns_csv {
      * @param splitor the splitor
      * @param data the data array
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static void write(const std::string &fileName, char splitor, const std::vector<StructType> &data) {
       std::ofstream ofs(fileName);
       CSVWriter::write<StructType, MemPacks...>(ofs, splitor, data);
@@ -622,7 +621,7 @@ namespace ns_csv {
      * @param header the header labels
      * @param data the data array
      */
-    template<typename StructType, typename... MemPacks>
+    template <typename StructType, typename... MemPacks>
     static void writeWithHeader(const std::string &fileName, char splitor,
                                 const std::array<std::string, sizeof...(MemPacks)> &header,
                                 const std::vector<StructType> &data) {
